@@ -1,0 +1,31 @@
+# Core dependencies
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+djoser==2.2.0
+djangorestframework-simplejwt==5.3.0
+openai==1.2.0
+pydub==0.25.1
+boto3==1.28.64
+django-storages==1.14.2
+gunicorn==21.2.0
+whitenoise==6.5.0
+Pillow==10.1.0
+numpy==1.26.1
+dj-database-url==2.1.0
+django-filter==23.5
+drf-nested-routers==0.93.4
+
+# WebSocket dependencies
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+twisted[tls]==23.10.0
+
+# Audio processing
+ffmpeg-python==0.2.0
+
+# Utilities
+requests==2.31.0 

@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background font-sans text-base;
+    cursor: default;
+  }
+}
+
+@layer components {
+  /* Window styling */
+  .window {
+    @apply bg-element border-2 border-border rounded-none overflow-hidden;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .window-title {
+    @apply bg-primary text-white p-1 flex justify-between items-center;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  /* Button styling */
+  .btn-win98 {
+    @apply bg-element border-2 border-border px-4 py-1 text-black font-normal shadow-win98;
+    text-transform: none;
+    font-size: 14px;
+  }
+
+  .btn-win98:active {
+    @apply shadow-win98-pressed;
+  }
+
+  /* Form inputs */
+  .input-win98 {
+    @apply bg-white border-2 border-border px-2 py-1 text-black;
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* File browser */
+  .folder {
+    @apply flex flex-col items-center justify-center p-2 cursor-pointer;
+    width: 100px;
+    height: 100px;
+  }
+
+  .folder-icon {
+    @apply w-16 h-16 bg-primary mb-2;
+    /* Icon styling will be added later with actual images */
+  }
+
+  .folder-name {
+    @apply text-center text-sm;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* List view */
+  .list-view {
+    @apply w-full;
+  }
+
+  .list-header {
+    @apply flex w-full border-b-2 border-border bg-element text-sm font-bold p-1;
+  }
+
+  .list-item {
+    @apply flex w-full border-b border-border p-1 hover:bg-background text-sm cursor-pointer;
+  }
+
+  .list-item:nth-child(odd) {
+    @apply bg-gray-100;
+  }
+  
+  .list-item.selected {
+    @apply bg-blue-200 hover:bg-blue-300;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-element;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border;
+    border: 1px solid #fff;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #000;
+  }
+
+  ::-webkit-scrollbar-button {
+    @apply bg-element;
+    border: 1px solid #000;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #000;
+    display: block;
+    height: 16px;
+    width: 16px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    @apply flex justify-between items-center p-1 bg-element border-t-2 border-border text-xs;
+  }
+  
+  /* Audio file list styling */
+  .audio-files-section h3 {
+    @apply text-lg font-bold mb-2 px-2;
+  }
+  
+  .audio-files-list {
+    @apply divide-y divide-gray-300;
+  }
+  
+  .audio-files-list li {
+    @apply p-2 hover:bg-gray-100 cursor-pointer relative flex flex-col;
+    @apply border-2 border-border m-1 rounded;
+    transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .audio-files-list li:hover {
+    @apply bg-gray-200;
+    transform: scale(1.03);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    border-color: #000080;
+  }
+  
+  .audio-files-list li.selected {
+    @apply bg-blue-100 hover:bg-blue-200;
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .audio-files-list .audio-title {
+    @apply font-bold;
+    padding-right: 20px;
+  }
+  
+  .audio-files-list .audio-duration, 
+  .audio-files-list .audio-user {
+    @apply text-xs text-gray-600;
+  }
+  
+  .audio-files-list .delete-button {
+    @apply absolute top-2 right-3 hover:text-red-700 font-bold w-6 h-6 flex items-center justify-center;
+    color: #ff0000;
+    font-size: 16px;
+    transition: transform 0.1s ease-in-out;
+  }
+  
+  .audio-files-list .delete-button:hover {
+    transform: scale(1.2);
+  }
+} 

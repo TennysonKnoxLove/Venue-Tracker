@@ -1,0 +1,236 @@
+/* Base styles */
+body {
+  margin: 0;
+  font-family: 'MS Sans Serif', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #222;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Windows 98 style elements */
+.window {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 1px 1px 0 0 #000;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.window-title {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: white;
+  font-weight: bold;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.window-title-buttons {
+  display: flex;
+}
+
+.window-button {
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #c0c0c0;
+  border: 1px solid;
+  border-color: #fff #808080 #808080 #fff;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.btn-win98 {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  padding: 4px 10px;
+  position: relative;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 1px 1px 0 0 #000;
+  cursor: pointer;
+}
+
+.btn-win98:active {
+  border-color: #808080 #dfdfdf #dfdfdf #808080;
+}
+
+.btn-win98:focus {
+  outline: 1px dotted #000;
+  outline-offset: -5px;
+}
+
+.tab-win98 {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  padding: 4px 10px;
+  position: relative;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tab-win98.active {
+  background-color: #dfdfdf;
+  border-bottom-color: #dfdfdf;
+  font-weight: bold;
+}
+
+.input-win98 {
+  border: 2px inset #a9a9a9;
+  background-color: #fff;
+  padding: 4px 8px;
+}
+
+.list-view {
+  border: 2px inset #a9a9a9;
+  background-color: #fff;
+}
+
+.list-header {
+  background-color: #c0c0c0;
+  display: flex;
+  padding: 2px 8px;
+  font-weight: bold;
+  border-bottom: 1px solid #808080;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.list-item:hover {
+  background-color: #0a246a;
+  color: white;
+}
+
+.status-bar {
+  border-top: 1px solid #808080;
+  padding: 2px 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  background-color: #c0c0c0;
+}
+
+/* Folder and File Icons */
+.folder-icon {
+  display: inline-block;
+  margin-right: 5px;
+  width: 16px;
+  height: 16px;
+  background-color: #ffcc66;
+  border: 1px solid #996633;
+  position: relative;
+  border-radius: 1px;
+}
+
+.folder-icon:before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 6px;
+  height: 4px;
+  background-color: #ffcc66;
+  border: 1px solid #996633;
+  border-bottom: none;
+  border-radius: 1px 1px 0 0;
+}
+
+.file-icon {
+  display: inline-block;
+  margin-right: 5px;
+  width: 12px;
+  height: 16px;
+  background-color: #ffffff;
+  border: 1px solid #000000;
+  position: relative;
+}
+
+.file-icon:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 4px;
+  border-color: #ffffff #ffffff #c0c0c0 #c0c0c0;
+}
+
+/* Form styles */
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+/* Utility classes */
+.primary {
+  color: #000080;
+}
+
+.border-primary {
+  border-color: #000080 !important;
+}
+
+/* Selected item styling */
+.selected {
+  background-color: #0a246a;
+  color: white;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #c0c0c0;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+}
+
+::-webkit-scrollbar-button {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  display: block;
+  height: 16px;
+  width: 16px;
+}
+
+/* Maximize compatibility with Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-win98 {
+    @apply inline-block px-2 py-1 text-center 
+           bg-gray-300 
+           border-t-2 border-l-2 border-white 
+           border-b-2 border-r-2 border-gray-600
+           active:border-t-2 active:border-l-2 active:border-gray-600
+           active:border-b-2 active:border-r-2 active:border-white
+           cursor-pointer;
+  }
+} 

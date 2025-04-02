@@ -1,0 +1,25 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
+
+# Install React types
+RUN npm install --save-dev @types/react @types/react-dom
+
+# Copy project files
+COPY frontend/ ./
+
+# Create empty files for components that might be missing
+RUN mkdir -p src/components/layout src/components/auth src/pages src/context
+RUN touch src/components/layout/MainLayout.tsx src/components/auth/ProtectedRoute.tsx \
+    src/components/auth/LoginForm.tsx src/components/auth/RegisterForm.tsx \
+    src/pages/HomePage.tsx src/pages/VenuesPage.tsx src/context/AuthContext.tsx
+
+# Expose the port
+EXPOSE 3000
+
+# Start development server with hot reloading
+CMD ["npm", "start"] 
