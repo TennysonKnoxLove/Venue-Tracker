@@ -1,0 +1,55 @@
+services:
+  backend:
+    image: registry.digitalocean.com/venue-tracker/backend:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/venue_tracker
+      - DJANGO_SETTINGS_MODULE=settings
+      - DEBUG=0
+      - ALLOWED_HOSTS=147.182.168.13,localhost,127.0.0.1,venue-tracker.com
+      - CORS_ALLOW_ALL_ORIGINS=True
+      - WS_ALLOWED_ORIGINS=http://147.182.168.13:3000,http://venue-tracker.com
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONUNBUFFERED=1
+      - DJANGO_LOG_LEVEL=INFO
+    command: >
+      sh -c "python manage.py migrate --no-input &&
+             daphne -v2 -b 0.0.0.0 -p 8000 asgi:application"
+    restart: always
+
+  frontend:
+    image: registry.digitalocean.com/venue-tracker/frontend:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://147.182.168.13:8000/api
+      - REACT_APP_BACKEND_HOST=147.182.168.13:8000
+    restart: always
+
+  db:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=venue_tracker
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data: 
