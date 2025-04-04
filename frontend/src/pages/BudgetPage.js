@@ -577,7 +577,7 @@ const BudgetPage = () => {
                 </div>
                 
                 <div className="flex flex-col md:flex-row gap-2 mb-2 items-start md:items-center">
-                  <label className="whitespace-nowrap font-bold min-w-[80px]">Date Range:</label>
+                  <label className="whitespace-nowrap font-bold min-w-[80px]">Range: </label>
                   <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <input
                       type="date"
