@@ -93,3 +93,17 @@ logs/
 *.swp
 *.swo
 *~ 
+
+# Large files
+frontend.tar
+backend.tar
+*.tar
+*.tar.gz
+*.zip
+*.rar
+*.7z
+*.iso
+*.dmg
+*.gz
+*.bz2
+*.xz 
