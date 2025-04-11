@@ -25,81 +25,70 @@ def discover_venues(state, city, radius):
     Returns:
         list: List of venue dictionaries
     """
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
-    
-    prompt = f"""
-    I need detailed information about music venues that are good for live hip-hop and R&B performances in or near {city}, {state} within {radius} miles.
-    
-    For each venue, please provide the following information in a structured JSON format:
-    
-    1. name: The venue's name
-    2. description: A brief description of the venue, its atmosphere, and why it's good for hip-hop/R&B
-    3. address: The street address
-    4. city: The city name
-    5. state: The state name
-    6. zipcode: The postal code
-    7. phone: Phone number (if available)
-    8. email: Contact email (if available)
-    9. website: Official website URL (if available)
-    10. capacity: Approximate audience capacity (if known)
-    11. genres: Music genres typically featured (focus on hip-hop/R&B relevance)
-    
-    Return the information as a JSON array with each venue as an object. Only include venues that are actually good for hip-hop and R&B performances.
-    
-    Example format:
-    [
-      {{
-        "name": "Venue Name",
-        "description": "Description of the venue...",
-        "address": "123 Main St",
-        "city": "City Name",
-        "state": "State",
-        "zipcode": "12345",
-        "phone": "555-123-4567",
-        "email": "contact@venue.com",
-        "website": "https://www.venue.com",
-        "capacity": 500,
-        "genres": "Hip-hop, R&B, Soul"
-      }},
-      // More venues...
-    ]
-    
-    Please list at least 5-8 relevant venues if possible.
-    """
-    
     try:
+        # Only pass the API key to the OpenAI client, ignoring any other parameters
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        
+        prompt = f"""
+        You are a knowledgeable assistant that helps find music venues for live hip-hop and R&B performances.
+        Based on the following location parameters, provide information about potential venues:
+
+        - State: {state}
+        - City: {city}
+        - Radius: {radius} miles
+
+        Please provide information in the following structured format for each venue:
+        [
+          {{
+            "name": "Venue Name",
+            "description": "Brief description of the venue",
+            "address": "Full street address",
+            "city": "City name",
+            "state": "State abbreviation",
+            "zipcode": "Zip code",
+            "phone": "Phone number if available",
+            "email": "Email if available",
+            "website": "Website URL if available",
+            "capacity": "Estimated capacity if known (number only)",
+            "genres": "Music genres typically featured"
+          }}
+        ]
+
+        Focus on venues that regularly host live music, have a stage or performance area, and would be suitable for hip-hop and R&B artists.
+        Include both well-known venues and lesser-known spots that might be open to new performers.
+        Provide up to 10 venues that match these criteria, ensuring the JSON format is valid.
+        """
+        
         response = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=settings.OPENAI_TEMPERATURE,
-            max_tokens=settings.OPENAI_MAX_TOKENS
+            messages=[
+                {"role": "system", "content": "You are a venue discovery assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=settings.OPENAI_MAX_TOKENS,
+            temperature=settings.OPENAI_TEMPERATURE
         )
         
-        # Extract the response content
         content = response.choices[0].message.content
         
-        # Find the JSON part of the response
-        try:
-            # Try to find JSON array in the response
-            start_idx = content.find('[')
-            end_idx = content.rfind(']') + 1
-            
-            if start_idx != -1 and end_idx != -1:
-                json_str = content[start_idx:end_idx]
-                venues_data = json.loads(json_str)
-                return venues_data
-            else:
-                # If no array brackets found, try to parse the whole content
-                venues_data = json.loads(content)
-                return venues_data
-                
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to decode JSON from OpenAI response: {e}")
-            logger.error(f"Response content: {content}")
+        # Find JSON array in the response
+        json_start = content.find('[')
+        json_end = content.rfind(']') + 1
+        
+        if json_start >= 0 and json_end > 0:
+            json_str = content[json_start:json_end]
+            try:
+                venues = json.loads(json_str)
+                return venues
+            except json.JSONDecodeError:
+                logger.error(f"Invalid JSON in OpenAI response: {json_str}")
+                return []
+        else:
+            logger.error(f"No JSON array found in response: {content}")
             return []
             
     except Exception as e:
-        logger.error(f"Error calling OpenAI API: {e}")
+        logger.error(f"Error calling OpenAI API: {str(e)}")
         return []
 
 class VenueDiscoveryView(APIView):

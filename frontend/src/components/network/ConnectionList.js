@@ -9,6 +9,7 @@ const ConnectionList = () => {
   const [search, setSearch] = useState('');
   const [skillFilter, setSkillFilter] = useState('');
   const [relationshipFilter, setRelationshipFilter] = useState('');
+  const [editingContactDate, setEditingContactDate] = useState(null);
 
   const relationshipOptions = [
     { value: 'contact', label: 'Contact' },
@@ -20,28 +21,29 @@ const ConnectionList = () => {
     { value: 'other', label: 'Other' },
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const connectionsData = await networkService.getConnections();
-        setConnections(connectionsData);
-        
-        // Extract unique skills from connections
-        const allSkills = new Set();
-        connectionsData.forEach(connection => {
-          if (connection.skills && Array.isArray(connection.skills)) {
-            connection.skills.forEach(skill => allSkills.add(skill));
-          }
-        });
-        setSkills(Array.from(allSkills).sort());
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Move fetchData outside useEffect to make it accessible throughout the component
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const connectionsData = await networkService.getConnections();
+      setConnections(connectionsData);
+      
+      // Extract unique skills from connections
+      const allSkills = new Set();
+      connectionsData.forEach(connection => {
+        if (connection.skills && Array.isArray(connection.skills)) {
+          connection.skills.forEach(skill => allSkills.add(skill));
+        }
+      });
+      setSkills(Array.from(allSkills).sort());
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -120,6 +122,36 @@ const ConnectionList = () => {
       console.error('Error fetching connections:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLastContactClick = (connectionId) => {
+    setEditingContactDate(connectionId);
+  };
+
+  const handleDateChange = async (connectionId, e) => {
+    const newDate = e.target.value;
+    try {
+      await networkService.updateConnection(connectionId, {
+        last_contact_date: newDate
+      });
+      // Refresh the connections list
+      fetchData();
+    } catch (error) {
+      console.error('Error updating last contact date:', error);
+      alert('Failed to update last contact date');
+    } finally {
+      setEditingContactDate(null);
+    }
+  };
+
+  const handleDateBlur = () => {
+    setEditingContactDate(null);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Escape') {
+      setEditingContactDate(null);
     }
   };
 
@@ -224,8 +256,25 @@ const ConnectionList = () => {
                     <td className="p-2 border-r-2 border-gray-400">
                       {connection.relationship_status || 'Contact'}
                     </td>
-                    <td className="p-2 border-r-2 border-gray-400">
-                      {connection.last_contact_date ? new Date(connection.last_contact_date).toLocaleDateString() : 'Never'}
+                    <td 
+                      className="p-2 border-r-2 border-gray-400 cursor-pointer hover:bg-gray-200" 
+                      onClick={() => handleLastContactClick(connection.id)}
+                    >
+                      {editingContactDate === connection.id ? (
+                        <input
+                          type="date"
+                          defaultValue={connection.last_contact_date || ''}
+                          onChange={(e) => handleDateChange(connection.id, e)}
+                          onBlur={handleDateBlur}
+                          onKeyDown={handleKeyPress}
+                          className="border border-gray-400 p-1 w-full"
+                          autoFocus
+                        />
+                      ) : (
+                        connection.last_contact_date ? 
+                          new Date(connection.last_contact_date).toLocaleDateString() : 
+                          'Never'
+                      )}
                     </td>
                     <td className="p-2">
                       <div className="flex space-x-2">

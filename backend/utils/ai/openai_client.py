@@ -1,7 +1,29 @@
 import json
-import openai
+import logging
 from django.conf import settings
+from openai import OpenAI
 from .templates import VENUE_DISCOVERY_PROMPT, NETWORKING_OPPORTUNITIES_PROMPT
+
+logger = logging.getLogger(__name__)
+
+def get_openai_client():
+    """
+    Safely initialize and return an OpenAI client, filtering out any unexpected parameters.
+    This helps avoid issues with proxy settings or other environment variables affecting initialization.
+    """
+    try:
+        # Only pass the API key to avoid any issues with proxies or other parameters
+        return OpenAI(api_key=settings.OPENAI_API_KEY)
+    except Exception as e:
+        logger.error(f"Error initializing OpenAI client: {str(e)}")
+        # As a fallback, try with an empty init and set api_key afterward
+        try:
+            client = OpenAI()
+            client.api_key = settings.OPENAI_API_KEY
+            return client
+        except Exception as e2:
+            logger.error(f"Fallback OpenAI client initialization also failed: {str(e2)}")
+            raise
 
 def discover_venues(state, city, radius):
     """
@@ -23,8 +45,9 @@ def discover_venues(state, city, radius):
             radius=radius
         )
         
-        # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        # Call OpenAI API - only pass API key
+        client = get_openai_client()
+        response = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "You are a venue discovery assistant."},
@@ -46,10 +69,11 @@ def discover_venues(state, city, radius):
             return venues
         else:
             # Fallback if no JSON found
+            logger.error(f"No JSON array found in response: {content}")
             return []
             
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
+        logger.error(f"Error calling OpenAI API: {str(e)}")
         return []
 
 def discover_networking(state, city, radius):
@@ -72,8 +96,9 @@ def discover_networking(state, city, radius):
             radius=radius
         )
         
-        # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        # Call OpenAI API - only pass API key
+        client = get_openai_client()
+        response = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": "You are a networking opportunity discovery assistant."},
@@ -95,8 +120,9 @@ def discover_networking(state, city, radius):
             return opportunities
         else:
             # Fallback if no JSON found
+            logger.error(f"No JSON array found in response: {content}")
             return []
             
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
+        logger.error(f"Error calling OpenAI API: {str(e)}")
         return [] 

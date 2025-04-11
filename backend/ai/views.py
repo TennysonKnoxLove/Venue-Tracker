@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import VenueSearch, VenueResult
 from .serializers import VenueSearchSerializer, VenueResultSerializer
-import openai
+from openai import OpenAI
 import os
 import json
 import uuid
@@ -15,29 +15,20 @@ from rest_framework.views import APIView
 # Comment out the problematic import for now
 # from venues.models import Venue
 
-# Configure OpenAI API - compatible with both legacy and new client versions
-try:
-    # Try the new client approach first (v1.0.0+)
-    client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-    # Function to call the completion API
-    def generate_ai_response(prompt, max_tokens=500):
+# Configure OpenAI API
+def generate_ai_response(prompt, max_tokens=500):
+    try:
+        # Use the helper function to get a properly initialized client
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
         )
         return response.choices[0].message.content
-except (TypeError, AttributeError):
-    # Fall back to legacy approach (pre v1.0.0)
-    openai.api_key = settings.OPENAI_API_KEY
-    # Function to call the completion API
-    def generate_ai_response(prompt, max_tokens=500):
-        response = openai.ChatCompletion.create(
-            model=settings.OPENAI_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Error generating AI response: {e}")
+        return "Error generating response. Please try again later."
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -69,6 +60,9 @@ def discover_venues(request):
         Format as JSON array with these exact fields: name, description, address, city, state, zipcode, phone, email, website, capacity, genres.
         Make each venue unique and distinctive. Include a range of sizes and styles.
         """
+        
+        # Initialize OpenAI client using the helper function
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
         
         # Call OpenAI API - updated for OpenAI 1.0+
         response = client.chat.completions.create(
@@ -154,6 +148,9 @@ def discover_opportunities(request):
         Format as JSON array with these exact fields: title, organization, description, location, deadline, website, opportunity_type, compensation.
         Make each opportunity unique and realistic. Include a range of opportunity types.
         """
+        
+        # Initialize OpenAI client using the helper function
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
         
         # Call OpenAI API - updated for OpenAI 1.0+
         response = client.chat.completions.create(

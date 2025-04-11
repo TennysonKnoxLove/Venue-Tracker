@@ -11,6 +11,7 @@ const ConnectionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [linkModalVisible, setLinkModalVisible] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editingContactDate, setEditingContactDate] = useState(false);
   const [linkFormData, setLinkFormData] = useState({
     platform: '',
     url: '',
@@ -119,6 +120,39 @@ const ConnectionDetail = () => {
       alert('Failed to add social link');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleLastContactClick = () => {
+    setEditingContactDate(true);
+  };
+
+  const handleDateChange = async (e) => {
+    const newDate = e.target.value;
+    try {
+      await networkService.updateConnection(id, {
+        last_contact_date: newDate
+      });
+      // Update local state
+      setConnection({
+        ...connection,
+        last_contact_date: newDate
+      });
+    } catch (error) {
+      console.error('Error updating last contact date:', error);
+      alert('Failed to update last contact date');
+    } finally {
+      setEditingContactDate(false);
+    }
+  };
+
+  const handleDateBlur = () => {
+    setEditingContactDate(false);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Escape') {
+      setEditingContactDate(false);
     }
   };
 
@@ -270,7 +304,27 @@ const ConnectionDetail = () => {
                   <div className="font-bold mb-1">Contact History</div>
                   <div className="border-2 border-gray-400 p-2 bg-gray-100">
                     <div className="mb-2">
-                      <span className="font-bold">Last Contact:</span> {connection.last_contact_date ? moment(connection.last_contact_date).format('MMM D, YYYY') : 'Never'}
+                      <span className="font-bold">Last Contact:</span>{' '}
+                      <span 
+                        className="cursor-pointer hover:bg-gray-200 px-1"
+                        onClick={handleLastContactClick}
+                      >
+                        {editingContactDate ? (
+                          <input
+                            type="date"
+                            defaultValue={connection.last_contact_date || ''}
+                            onChange={handleDateChange}
+                            onBlur={handleDateBlur}
+                            onKeyDown={handleKeyPress}
+                            className="border border-gray-400 p-1"
+                            autoFocus
+                          />
+                        ) : (
+                          connection.last_contact_date ? 
+                            moment(connection.last_contact_date).format('MMM D, YYYY') : 
+                            'Never'
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>

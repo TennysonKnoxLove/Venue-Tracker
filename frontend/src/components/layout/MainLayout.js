@@ -91,6 +91,9 @@ const MainLayout = () => {
                   </span>
                 )}
               </Link>
+              <Link to="/profile" className="btn-win98 flex items-center">
+                <span className="mr-1">👤</span> Profile
+              </Link>
               <Button onClick={handleLogout}>Logout</Button>
             </div>
           </div>

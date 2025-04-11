@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from .models import VenueOutreach
 from .serializers import VenueOutreachSerializer, EmailGenerationSerializer
-import openai
+from openai import OpenAI
 from django.conf import settings
 from django.utils import timezone
 from profiles.models import ArtistProfile, SocialLink
@@ -13,28 +13,40 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI with legacy method for compatibility
-openai.api_key = settings.OPENAI_API_KEY
-
 def generate_completion(prompt, max_tokens=500):
-    """Generate a completion using OpenAI API with compatibility for different versions"""
+    """Generate a completion using OpenAI API"""
     try:
-        # First try the newer version approach
-        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        # Debug dump of available arguments - this will help us understand what's being passed
+        logger.info("OpenAI API settings: KEY=%s, MODEL=%s", 
+                   settings.OPENAI_API_KEY[:5] + "..." if settings.OPENAI_API_KEY else "Not set", 
+                   settings.OPENAI_MODEL)
+        
+        # Try to create client directly with minimal arguments
+        logger.info("Initializing OpenAI client directly")
+        try:
+            client = OpenAI(api_key=settings.OPENAI_API_KEY)
+            logger.info("OpenAI client initialized successfully")
+        except Exception as e:
+            logger.error(f"First OpenAI client init error: {e}")
+            # Fallback approach - create with empty init
+            logger.info("Trying fallback OpenAI client initialization")
+            client = OpenAI()
+            client.api_key = settings.OPENAI_API_KEY
+            logger.info("Fallback OpenAI client initialization succeeded")
+
+        logger.info("Calling OpenAI completion create")
         response = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
         )
+        logger.info("OpenAI completion successful")
         return response.choices[0].message.content
-    except (TypeError, AttributeError):
-        # Fall back to legacy approach
-        response = openai.ChatCompletion.create(
-            model=settings.OPENAI_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"Error generating OpenAI completion: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {repr(e)}")
+        return "Error generating response. Please try again later."
 
 class VenueOutreachViewSet(viewsets.ModelViewSet):
     """ViewSet for venue outreach history"""
