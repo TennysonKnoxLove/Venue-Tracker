@@ -107,4 +107,4 @@ backend.tar
 *.dmg
 *.gz
 *.bz2
-*.xz 
+*.xz frontend.tar
