@@ -14,6 +14,7 @@ const EventDetail = () => {
       try {
         setLoading(true);
         const data = await networkingService.getEvent(id);
+        console.log('Fetched event data:', data);
         setEvent(data);
       } catch (error) {
         console.error('Error fetching event:', error);
@@ -41,13 +42,24 @@ const EventDetail = () => {
     }
   };
 
+  /**
+   * Format event date and time for display
+   * @param {string} date - Event date in YYYY-MM-DD format
+   * @param {string} time - Event time in HH:MM:SS format
+   * @returns {string} Formatted date and time string
+   */
   const formatEventDate = (date, time) => {
-    if (!date) return 'No date specified';
+    if (!date) return 'Date not specified';
     
+    // Format the date part
     const formattedDate = moment(date).format('MMM D, YYYY');
+    
+    // Add time if available
     if (time) {
-      return `${formattedDate} at ${moment(time, 'HH:mm:ss').format('h:mm A')}`;
+      const formattedTime = moment(time, 'HH:mm:ss').format('h:mm A');
+      return `${formattedDate} at ${formattedTime}`;
     }
+    
     return formattedDate;
   };
 
@@ -111,11 +123,11 @@ const EventDetail = () => {
                 <span className="block">{event.location || 'Not specified'}</span>
               </div>
               
-              {event.event_type_name && (
+              {(event.event_type_name || (event.event_type && event.event_type.name)) && (
                 <div className="mb-2">
                   <span className="block font-bold">Event Type:</span>
                   <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                    {event.event_type_name}
+                    {event.event_type_name || event.event_type.name}
                   </span>
                 </div>
               )}

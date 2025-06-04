@@ -83,8 +83,8 @@ const EmailGeneratorPage = () => {
     try {
       // Primary method - use Clipboard API if available
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(generatedEmail);
-        alert('Email copied to clipboard!');
+    navigator.clipboard.writeText(generatedEmail);
+    alert('Email copied to clipboard!');
       } else {
         // Fallback method - create temporary textarea element
         const textArea = document.createElement('textarea');

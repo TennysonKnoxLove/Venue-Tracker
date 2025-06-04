@@ -3,63 +3,64 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { networkingService } from '../../api';
 import moment from 'moment';
 
-// Fallback event types in case the API call fails
-const FALLBACK_EVENT_TYPES = [
-  { id: 'conference', name: 'Conference' },
-  { id: 'workshop', name: 'Workshop' },
-  { id: 'meetup', name: 'Meetup' },
-  { id: 'showcase', name: 'Showcase' },
-  { id: 'festival', name: 'Festival' },
-  { id: 'competition', name: 'Competition' },
-  { id: 'seminar', name: 'Seminar' },
-  { id: 'party', name: 'Party' },
-  { id: 'other', name: 'Other' }
-];
+// Remove the hardcoded fallback event types as they don't match database IDs
+const FALLBACK_EVENT_TYPES = [];
 
 const EventForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
-  const [loading, setLoading] = useState(isEditMode);
+  const [loading, setLoading] = useState(true); // Always start with loading to ensure we get event types
   const [submitting, setSubmitting] = useState(false);
-  const [eventTypes, setEventTypes] = useState(FALLBACK_EVENT_TYPES);
+  const [eventTypes, setEventTypes] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     location: '',
     event_type: '',
     date: moment().format('YYYY-MM-DD'),
-    time: moment().format('HH:mm'),
-    cost: '',
+    start_time: moment().format('HH:mm'),
+    cost: ''
   });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch event types
+        // Fetch event types first
         try {
+          // Log the API request
+          console.log('Fetching event types...');
           const typesData = await networkingService.getEventTypes();
+          console.log('Received event types:', typesData);
+          
           if (Array.isArray(typesData) && typesData.length > 0) {
             setEventTypes(typesData);
+          } else {
+            console.warn('Received empty event types array or non-array response');
           }
         } catch (error) {
-          console.warn('Failed to fetch event types, using fallback values', error);
-          // We'll use the fallback types already set in state
+          console.error('Failed to fetch event types:', error);
+          // Return early since we need event types for the form
+          alert('Failed to load event types. Please try again later.');
+          return;
         }
         
         // If editing, fetch event details
         if (isEditMode) {
           const eventData = await networkingService.getEvent(id);
+          console.log('Loaded event data:', eventData);
+          
           setFormData({
             name: eventData.name || '',
             description: eventData.description || '',
             location: eventData.location || '',
-            event_type: eventData.event_type || '',
-            date: moment(eventData.date).format('YYYY-MM-DD'),
-            time: eventData.time ? moment(eventData.time, 'HH:mm:ss').format('HH:mm') : '',
-            cost: eventData.cost !== null ? eventData.cost : '',
+            event_type: eventData.event_type ? eventData.event_type.id || eventData.event_type : '',
+            date: eventData.date || moment().format('YYYY-MM-DD'),
+            start_time: eventData.time ? moment(eventData.time, 'HH:mm:ss').format('HH:mm') : moment().format('HH:mm'),
+            cost: eventData.cost !== null ? eventData.cost : ''
           });
         }
       } catch (error) {
@@ -74,38 +75,62 @@ const EventForm = () => {
   }, [id, isEditMode]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    const { name, value, type, checked } = e.target;
+    
+    // Use the checked property for checkboxes
+    const newValue = type === 'checkbox' ? checked : value;
+    
+    console.log(`Field changed: ${name}, new value: ${newValue}`);
+    
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: newValue,
+    }));
   };
 
+  /**
+   * Handle form submission
+   * @param {Event} e - Form submission event
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setSubmitting(true);
+    setError(null);
+
     try {
-      setSubmitting(true);
+      // Create a copy of formData to avoid mutating state directly
+      const eventData = { ...formData };
       
-      // Prepare event data for submission
-      const eventData = {
-        ...formData,
-        cost: formData.cost !== '' ? parseFloat(formData.cost) : null,
-      };
-      
-      if (isEditMode) {
-        await networkingService.updateEvent(id, eventData);
-        alert('Event updated successfully');
-      } else {
-        await networkingService.createEvent(eventData);
-        alert('Event created successfully');
+      // Format the date and time for API submission
+      if (eventData.date) {
+        // Ensure date is in YYYY-MM-DD format for the backend
+        eventData.date = moment(eventData.date).format('YYYY-MM-DD');
       }
       
-      navigate('/networking/events');
-    } catch (error) {
-      console.error('Error saving event:', error);
-      alert('Failed to save event');
-    } finally {
+      // Use start_time as the time field for the backend
+      if (eventData.start_time) {
+        // Ensure time is in HH:MM:SS format for the backend
+        eventData.time = moment(eventData.start_time, 'HH:mm').format('HH:mm:ss');
+      }
+      
+      // Remove start_time as it's not in the database model
+      delete eventData.start_time;
+      
+      console.log('Submitting event data:', eventData);
+      
+      // Make API request (create or update)
+      const response = isEditMode
+        ? await networkingService.updateEvent(id, eventData)
+        : await networkingService.createEvent(eventData);
+      
+      console.log('API response:', response);
+      
+      // Navigate to event list on success
+      navigate('/networking');
+      alert(`Event ${isEditMode ? 'updated' : 'created'} successfully!`);
+    } catch (err) {
+      console.error('Error submitting event:', err);
+      setError(err.response?.data || { detail: 'Failed to submit event' });
       setSubmitting(false);
     }
   };
@@ -146,19 +171,28 @@ const EventForm = () => {
             
             <div>
               <label className="block mb-1">
-                Event Type
+                Event Type*
               </label>
+              {eventTypes.length > 0 ? (
               <select
                 name="event_type"
                 value={formData.event_type}
                 onChange={handleChange}
+                  required
                 className="w-full border-2 border-gray-400 p-2"
               >
                 <option value="">Select Type</option>
                 {eventTypes.map(type => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
                 ))}
               </select>
+              ) : (
+                <div className="border-2 border-gray-400 p-2 bg-gray-100">
+                  Loading event types...
+                </div>
+              )}
             </div>
             
             <div>
@@ -177,13 +211,14 @@ const EventForm = () => {
             
             <div>
               <label className="block mb-1">
-                Time
+                Time*
               </label>
               <input
                 type="time"
-                name="time"
-                value={formData.time}
+                name="start_time"
+                value={formData.start_time}
                 onChange={handleChange}
+                required
                 className="w-full border-2 border-gray-400 p-2"
               />
             </div>
@@ -209,12 +244,11 @@ const EventForm = () => {
               <input
                 type="number"
                 step="0.01"
-                min="0"
                 name="cost"
                 value={formData.cost}
                 onChange={handleChange}
+                placeholder="0.00"
                 className="w-full border-2 border-gray-400 p-2"
-                placeholder="Leave blank if free"
               />
             </div>
           </div>
@@ -227,26 +261,32 @@ const EventForm = () => {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full border-2 border-gray-400 p-2 h-32"
-              placeholder="Event details, what to expect, etc."
+              rows={4}
+              className="w-full border-2 border-gray-400 p-2"
             ></textarea>
           </div>
           
-          <div className="flex space-x-2 pt-4">
+          {error && (
+            <div className="bg-red-100 border-2 border-red-400 p-3 text-red-700">
+              {error.detail || "An error occurred while submitting the form."}
+            </div>
+          )}
+          
+          <div className="flex space-x-2 justify-end">
             <button
-              type="submit"
+              type="button"
+              onClick={() => navigate('/networking')}
               className="btn-win98"
               disabled={submitting}
             >
-              {submitting ? 'Saving...' : (isEditMode ? 'Update Event' : 'Create Event')}
-            </button>
-            
-            <button
-              type="button"
-              className="btn-win98"
-              onClick={() => navigate('/networking')}
-            >
               Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-win98 bg-blue-800 text-white"
+              disabled={submitting}
+            >
+              {submitting ? 'Saving...' : isEditMode ? 'Update Event' : 'Create Event'}
             </button>
           </div>
         </form>

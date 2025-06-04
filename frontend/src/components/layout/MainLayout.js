@@ -71,6 +71,12 @@ const MainLayout = () => {
               <Link to="/network" className="btn-win98 flex items-center">
                 <span className="mr-1">👥</span> Connections
               </Link>
+              {/* Only show Networking link in development environment */}
+              {process.env.NODE_ENV !== 'production' && (
+                <Link to="/networking" className="btn-win98 flex items-center">
+                  <span className="mr-1">🔄</span> Networking
+                </Link>
+              )}
               <Link to="/email" className="btn-win98 flex items-center">
                 <span className="mr-1">📧</span> Email
               </Link>

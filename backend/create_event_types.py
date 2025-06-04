@@ -11,7 +11,8 @@ with transaction.atomic():
         {'name': 'Festival', 'description': 'Large-scale celebration or event with multiple activities'},
         {'name': 'Competition', 'description': 'Competitive event with judging and prizes'},
         {'name': 'Seminar', 'description': 'Educational event with one or more speakers'},
-        {'name': 'Party', 'description': 'Social celebration event'}
+        {'name': 'Party', 'description': 'Social celebration event'},
+        {'name': 'Other', 'description': 'Any other type of event not listed above'}
     ]
     
     for et in event_types:

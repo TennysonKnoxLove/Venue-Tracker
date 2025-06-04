@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import NetworkingSearchQuery, EventType, Event, EventAttendee, Opportunity, Milestone
 from network.serializers import NetworkContactSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 class NetworkingSearchQuerySerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,6 +42,19 @@ class EventSerializer(serializers.ModelSerializer):
     
     def get_attendees_count(self, obj):
         return obj.attendees.count()
+
+    def to_representation(self, instance):
+        """Custom representation to ensure time fields are properly formatted"""
+        ret = super().to_representation(instance)
+        # Log the data for debugging
+        logger.debug(f"Serializing event {instance.id} with date: {instance.date}, time: {instance.time}")
+        return ret
+        
+    def validate(self, data):
+        """Validate the data before saving"""
+        # Log the received data
+        logger.debug(f"Validating event data: {data}")
+        return data
 
 class MilestoneSerializer(serializers.ModelSerializer):
     class Meta:

@@ -132,8 +132,15 @@ const ConnectionList = () => {
   const handleDateChange = async (connectionId, e) => {
     const newDate = e.target.value;
     try {
+      // Find the connection to get its name
+      const connection = connections.find(c => c.id === connectionId);
+      if (!connection) {
+        throw new Error('Connection not found');
+      }
+      
       await networkService.updateConnection(connectionId, {
-        last_contact_date: newDate
+        last_contact_date: newDate,
+        name: connection.name // Include the required name field
       });
       // Refresh the connections list
       fetchData();

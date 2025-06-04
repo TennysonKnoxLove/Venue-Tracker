@@ -21,6 +21,7 @@ const EventsDashboard = () => {
         networkingService.getPastEvents()
       ]);
       
+      console.log('Upcoming events:', upcomingData);
       setUpcomingEvents(upcomingData);
       setPastEvents(pastData);
     } catch (error) {
@@ -32,6 +33,8 @@ const EventsDashboard = () => {
   };
 
   const getEventTypeDisplay = (eventType) => {
+    // If eventType is an object with id property, use the id
+    
     const types = {
       conference: { name: 'Conference', color: 'bg-blue-500' },
       workshop: { name: 'Workshop', color: 'bg-green-500' },
@@ -44,7 +47,18 @@ const EventsDashboard = () => {
       other: { name: 'Other', color: 'bg-gray-500' }
     };
     
-    const type = types[eventType] || types.other;
+    // Use the event_type_name if available
+    if (typeof eventType === 'object' && eventType !== null && eventType.name) {
+      return (
+        <span className="bg-blue-500 text-white text-xs px-1 rounded">
+          {eventType.name}
+        </span>
+      );
+    }
+    
+    // If it's an event type ID or the event_type_name property exists
+    const displayName = typeof eventType === 'string' ? eventType : 'other';
+    const type = types[displayName.toLowerCase()] || types.other;
     
     return (
       <span className={`${type.color} text-white text-xs px-1 rounded`}>
@@ -53,15 +67,25 @@ const EventsDashboard = () => {
     );
   };
 
-  const formatEventDate = (startDate, endDate) => {
-    const start = moment(startDate);
-    const end = moment(endDate);
+  /**
+   * Format event date and time for display
+   * @param {string} date - Event date in YYYY-MM-DD format
+   * @param {string} time - Event time in HH:MM:SS format
+   * @returns {string} Formatted date and time string
+   */
+  const formatEventDateTime = (date, time) => {
+    if (!date) return 'Date not specified';
     
-    if (start.isSame(end, 'day')) {
-      return `${start.format('MMM D, YYYY')} · ${start.format('h:mm A')} - ${end.format('h:mm A')}`;
-    } else {
-      return `${start.format('MMM D')} - ${end.format('MMM D, YYYY')}`;
+    // Format the date part
+    const formattedDate = moment(date).format('MMM D, YYYY');
+    
+    // Add time if available
+    if (time) {
+      const formattedTime = moment(time, 'HH:mm:ss').format('h:mm A');
+      return `${formattedDate} · ${formattedTime}`;
     }
+    
+    return formattedDate;
   };
 
   const renderEventsList = (events) => {
@@ -85,7 +109,15 @@ const EventsDashboard = () => {
                 <Link to={`/networking/events/${item.id}`} className="text-blue-800 underline font-bold">
                   {item.name}
                 </Link>
-                <span className="ml-2">{getEventTypeDisplay(item.event_type)}</span>
+                <span className="ml-2">
+                  {item.event_type_name ? (
+                    <span className="bg-blue-500 text-white text-xs px-1 rounded">
+                      {item.event_type_name}
+                    </span>
+                  ) : (
+                    getEventTypeDisplay(item.event_type)
+                  )}
+                </span>
                 {item.virtual && (
                   <span className="bg-blue-600 text-white text-xs px-1 rounded">Virtual</span>
                 )}
@@ -95,7 +127,7 @@ const EventsDashboard = () => {
             <div className="pl-2 my-2">
               <div className="flex items-center mb-1">
                 <span className="mr-2">📅</span>
-                {formatEventDate(item.start_date, item.end_date)}
+                {formatEventDateTime(item.date, item.time)}
               </div>
               
               {item.location && (

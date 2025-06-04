@@ -15,6 +15,11 @@ from .serializers import (
 )
 from network.models import NetworkContact
 from utils.ai.openai_client import discover_networking
+from django.db.models import Q, Value
+from django.db import models
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -66,8 +71,34 @@ class EventViewSet(viewsets.ModelViewSet):
         return Event.objects.filter(user=self.request.user)
         
     def perform_create(self, serializer):
-        """Save the user with the event"""
+        """Override to add debugging for date and time data"""
+        logger.info(f"Creating event with data: {serializer.validated_data}")
+        # Log specific date/time fields for debugging
+        if 'date' in serializer.validated_data:
+            logger.info(f"Date field: {serializer.validated_data['date']}")
+        if 'time' in serializer.validated_data:
+            logger.info(f"Time field: {serializer.validated_data['time']}")
+        if 'start_date' in serializer.validated_data:
+            logger.info(f"Start date field: {serializer.validated_data['start_date']}")
+        if 'end_date' in serializer.validated_data:
+            logger.info(f"End date field: {serializer.validated_data['end_date']}")
+            
         serializer.save(user=self.request.user)
+    
+    def update(self, request, *args, **kwargs):
+        """Override to add debugging for date and time data"""
+        logger.info(f"Updating event with data: {request.data}")
+        # Log specific date/time fields for debugging
+        if 'date' in request.data:
+            logger.info(f"Date field: {request.data['date']}")
+        if 'time' in request.data:
+            logger.info(f"Time field: {request.data['time']}")
+        if 'start_date' in request.data:
+            logger.info(f"Start date field: {request.data['start_date']}")
+        if 'end_date' in request.data:
+            logger.info(f"End date field: {request.data['end_date']}")
+            
+        return super().update(request, *args, **kwargs)
     
     @action(detail=False, methods=['get'])
     def upcoming(self, request):

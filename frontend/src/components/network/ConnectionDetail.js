@@ -131,7 +131,8 @@ const ConnectionDetail = () => {
     const newDate = e.target.value;
     try {
       await networkService.updateConnection(id, {
-        last_contact_date: newDate
+        last_contact_date: newDate,
+        name: connection.name
       });
       // Update local state
       setConnection({
