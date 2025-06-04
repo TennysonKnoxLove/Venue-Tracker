@@ -4,6 +4,10 @@ import uuid
 import tempfile
 import json
 import numpy as np
+import logging
+import math # Import math for math.isnan, or use np.isnan
+
+logger = logging.getLogger(__name__)
 
 def process_audio(file_path, edit_type, parameters):
     """
@@ -99,26 +103,31 @@ def generate_waveform_data(audio_path, num_points=100):
         num_points (int): Number of data points to generate
         
     Returns:
-        dict: Waveform data and duration
+        dict: Waveform data and duration, or None if an error occurs
     """
+    logger.info(f"Generating waveform data for: {audio_path}")
     try:
         audio = AudioSegment.from_file(audio_path)
+        logger.debug(f"Successfully loaded audio: {audio_path} with Pydub.")
         
-        # Calculate duration in seconds
         duration_seconds = len(audio) / 1000.0
         
-        # Convert to mono if stereo
         if audio.channels > 1:
+            logger.debug(f"Converting stereo to mono for: {audio_path}")
             audio = audio.set_channels(1)
         
-        # Get raw audio data
         samples = np.array(audio.get_array_of_samples())
+        logger.debug(f"Got array of samples for: {audio_path}, shape: {samples.shape}")
         
-        # Normalize
-        samples = samples / np.max(np.abs(samples))
+        max_abs_sample = np.max(np.abs(samples))
+        if max_abs_sample == 0:
+            logger.warning(f"Audio file {audio_path} appears to be silent or empty. Waveform will be flat.")
+            # For silent audio, create a list of zeros (valid JSON numbers)
+            normalized_samples = np.zeros_like(samples, dtype=float) 
+        else:
+            normalized_samples = samples / max_abs_sample
         
-        # Resample to desired number of points
-        sample_count = len(samples)
+        sample_count = len(normalized_samples)
         points_per_sample = sample_count // num_points
         
         waveform = []
@@ -126,18 +135,24 @@ def generate_waveform_data(audio_path, num_points=100):
             start = i * points_per_sample
             end = min((i + 1) * points_per_sample, sample_count)
             if start < end:
-                # Use max amplitude in this segment
-                segment = samples[start:end]
-                amplitude = float(max(abs(segment.min()), abs(segment.max())))
-                waveform.append(amplitude)
+                segment = normalized_samples[start:end]
+                # Calculate max absolute amplitude in the segment
+                amplitude = float(max(np.max(segment), -np.min(segment))) # Handles positive and negative peaks
+                if np.isnan(amplitude): # Check for NaN
+                    logger.warning(f"NaN detected for amplitude at point {i} for {audio_path}. Replacing with null (0.0 for now).")
+                    waveform.append(0.0) # Replace NaN with 0.0 (or None which becomes null)
+                else:
+                    waveform.append(amplitude)
             else:
                 waveform.append(0.0)
         
+        logger.info(f"Successfully generated waveform for: {audio_path}, duration: {duration_seconds}s")
         return {
             'waveform': waveform,
             'duration': duration_seconds
         }
     
     except Exception as e:
-        print(f"Error generating waveform data: {e}")
-        return {'waveform': [], 'duration': 0} 
+        logger.error(f"Error generating waveform data for {audio_path}: {e}", exc_info=True)
+        # Return None to indicate a significant failure to the caller
+        return None 

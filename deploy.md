@@ -1,1 +1,0 @@
-scp .env docker-compose.prod.yml root@147.182.168.13:~/

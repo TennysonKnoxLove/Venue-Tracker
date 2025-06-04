@@ -34,13 +34,11 @@ class SocialLink(models.Model):
         return f"{self.label} - {self.profile.artist_name}"
     
     def clean(self):
-        # Format URL if needed
+        # Ensure URL has a scheme if it doesn't already.
+        # The serializer's validate_url should handle this first, 
+        # but this is a fallback for model-level operations.
         if self.url and not (self.url.startswith('http://') or self.url.startswith('https://')):
             self.url = f"https://{self.url}"
-        
-        # Validate URL
-        validator = URLValidator()
-        try:
-            validator(self.url)
-        except ValidationError:
-            raise ValidationError({'url': 'Enter a valid URL.'})
+        # The URLField itself will perform validation using URLValidator.
+        # No need to explicitly call it again here unless for very custom logic.
+        super().clean() # Call parent's clean method

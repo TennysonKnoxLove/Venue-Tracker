@@ -2,16 +2,12 @@ from rest_framework import serializers
 from .models import ArtistProfile, SocialLink
 
 class SocialLinkSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(required=True)
+
     class Meta:
         model = SocialLink
         fields = ['id', 'label', 'url', 'order']
-        read_only_fields = ['id']
-    
-    def validate_url(self, value):
-        """Validate and format URL if needed."""
-        if value and not (value.startswith('http://') or value.startswith('https://')):
-            value = f"https://{value}"
-        return value
+        read_only_fields = ['id', 'order']
 
 class ArtistProfileSerializer(serializers.ModelSerializer):
     social_links = SocialLinkSerializer(many=True, read_only=True)

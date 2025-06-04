@@ -10,6 +10,9 @@ from django.conf import settings
 from ..models import AudioFile, AudioEdit
 from ..serializers import AudioFileSerializer, AudioFileDetailSerializer, AudioEditSerializer
 from ..processing import process_audio, generate_waveform_data
+import logging
+
+logger = logging.getLogger(__name__)
 
 class IsOwnerOrReadOnly(BasePermission):
     """
@@ -47,7 +50,6 @@ class AudioFileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Get file extension and check if it's supported
         file_extension = file_obj.name.split('.')[-1].lower()
         if file_extension not in ['mp3', 'wav', 'ogg', 'm4a']:
             return Response(
@@ -55,7 +57,6 @@ class AudioFileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Create serializer with file data
         serializer = self.get_serializer(data={
             'title': request.data.get('title', file_obj.name),
             'file': file_obj,
@@ -64,24 +65,40 @@ class AudioFileViewSet(viewsets.ModelViewSet):
         })
         
         if serializer.is_valid():
-            # Save the file
             audio_file = serializer.save()
+            logger.info(f"AudioFile record created with ID: {audio_file.id} for file {file_obj.name}")
             
-            # Generate waveform data
-            file_path = audio_file.file.path
-            waveform_data = generate_waveform_data(file_path)
-            
-            # Update the audio file with waveform data and duration
-            audio_file.waveform_data = waveform_data['waveform']
-            audio_file.duration = waveform_data['duration']
-            audio_file.save()
-            
-            # Return the updated data
-            return Response(
-                AudioFileSerializer(audio_file).data,
-                status=status.HTTP_201_CREATED
-            )
+            try:
+                file_path = audio_file.file.path
+                logger.info(f"Attempting to generate waveform data for: {file_path}")
+                processing_result = generate_waveform_data(file_path)
+                
+                if processing_result is None:
+                    logger.error(f"Failed to generate waveform data for AudioFile ID: {audio_file.id}. Deleting record.")
+                    audio_file.delete()
+                    return Response(
+                        {'error': 'Failed to process audio metadata. The file might be corrupted or unsupported.'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+                
+                audio_file.waveform_data = processing_result['waveform']
+                audio_file.duration = processing_result['duration']
+                audio_file.save()
+                logger.info(f"Successfully updated AudioFile ID: {audio_file.id} with waveform and duration.")
+                
+                return Response(
+                    AudioFileSerializer(audio_file).data,
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                logger.error(f"Unexpected error during post-save processing for AudioFile ID: {audio_file.id}. Deleting record. Error: {e}", exc_info=True)
+                audio_file.delete()
+                return Response(
+                    {'error': 'An unexpected error occurred while processing the audio file.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         
+        logger.warning(f"Audio file upload failed validation for user {request.user.id}: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])

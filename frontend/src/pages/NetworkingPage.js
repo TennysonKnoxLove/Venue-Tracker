@@ -66,98 +66,14 @@ const OpportunityDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [contact, setContact] = useState(null);
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
 
-  // Define opportunity types and status options for display
+  // Define opportunity types for display
   const opportunityTypes = {
     'job': 'Job Posting',
     'internship': 'Internship',
     'contract': 'Contract',
     'collaboration': 'Collaboration',
     'other': 'Other',
-  };
-
-  // Updated to match exactly what the backend error message says are valid values
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'interviewing', label: 'Interviewing' },
-    { value: 'offer_received', label: 'Offer Received' },
-    { value: 'accepted', label: 'Accepted' },
-    { value: 'declined', label: 'Declined' },
-    { value: 'closed', label: 'Closed' }
-  ];
-
-  const statusLabels = {
-    'active': 'Active',
-    'interviewing': 'Interviewing',
-    'offer_received': 'Offer Received',
-    'accepted': 'Accepted',
-    'declined': 'Declined',
-    'closed': 'Closed'
-  };
-
-  const statusColors = {
-    'active': 'bg-blue-500',
-    'interviewing': 'bg-purple-500',
-    'offer_received': 'bg-yellow-500',
-    'accepted': 'bg-green-500',
-    'declined': 'bg-red-500',
-    'closed': 'bg-gray-500'
-  };
-
-  const handleStatusChange = async (newStatus) => {
-    try {
-      setShowStatusMenu(false);
-      
-      // Confirm the status change with the exact backend status value
-      const confirmed = await win98Confirm(
-        `Change status to "${statusLabels[newStatus]}"?`,
-        'Change Status',
-        'question'
-      );
-      
-      if (!confirmed) return;
-      
-      console.log(`Updating opportunity ${id} status to:`, newStatus);
-      
-      // Instead of using the service function, we'll use a direct API call for debugging
-      await networkingService.updateOpportunity(id, { status: newStatus });
-      
-      // Show success message
-      await win98Alert(
-        `Status updated to "${statusLabels[newStatus]}"`,
-        'Status Updated',
-        'info'
-      );
-      
-      // Update the local state
-      setOpportunity({
-        ...opportunity,
-        status: newStatus
-      });
-      
-    } catch (error) {
-      console.error('Error updating status:', error);
-      
-      // Show detailed error message to help debugging
-      let errorMessage = 'Failed to update status. ';
-      
-      if (error.response) {
-        errorMessage += `Server responded with status ${error.response.status}. `;
-        
-        if (error.response.data) {
-          if (typeof error.response.data === 'object') {
-            errorMessage += '\n\nDetails:\n' + JSON.stringify(error.response.data, null, 2);
-          } else {
-            errorMessage += error.response.data;
-          }
-        }
-      } else if (error.message) {
-        errorMessage += error.message;
-      }
-      
-      await win98Alert(errorMessage, 'Error', 'error');
-    }
   };
 
   useEffect(() => {
@@ -227,42 +143,6 @@ const OpportunityDetail = () => {
       <div className="p-4 bg-gray-200">
         <div className="mb-4 flex justify-between items-center">
           <h2 className="text-xl font-bold">{opportunity.title}</h2>
-          <div className="relative">
-            <button 
-              onClick={() => setShowStatusMenu(!showStatusMenu)}
-              className={`${statusColors[opportunity.status] || 'bg-gray-400'} text-white px-2 py-1 text-sm rounded hover:opacity-90 flex items-center`}
-            >
-              {statusLabels[opportunity.status] || opportunity.status}
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            
-            {showStatusMenu && (
-              <div className="absolute right-0 mt-1 w-48 border-2 border-gray-400 bg-gray-200 shadow-lg z-10">
-                <div className="window-title-win98 flex items-center justify-between p-1">
-                  <div className="text-black text-xs font-bold">Change Status</div>
-                  <button 
-                    onClick={() => setShowStatusMenu(false)}
-                    className="text-black text-xs font-bold"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="p-1">
-                  {statusOptions.map(status => (
-                    <button
-                      key={status.value}
-                      onClick={() => handleStatusChange(status.value)}
-                      className={`w-full text-left p-1 mb-1 text-sm hover:bg-blue-600 hover:text-white ${opportunity.status === status.value ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
-                    >
-                      {status.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="bg-white border-2 border-gray-400 p-3 mb-4">

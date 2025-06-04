@@ -13,6 +13,7 @@ const EventForm = () => {
   const [loading, setLoading] = useState(true); // Always start with loading to ensure we get event types
   const [submitting, setSubmitting] = useState(false);
   const [eventTypes, setEventTypes] = useState([]);
+  const [rawEventTypeInput, setRawEventTypeInput] = useState(''); // New state for text input
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -28,40 +29,46 @@ const EventForm = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch event types first
+        let fetchedEventTypes = [];
         try {
-          // Log the API request
           console.log('Fetching event types...');
           const typesData = await networkingService.getEventTypes();
           console.log('Received event types:', typesData);
           
-          if (Array.isArray(typesData) && typesData.length > 0) {
+          if (Array.isArray(typesData)) { // Allow empty array
             setEventTypes(typesData);
+            fetchedEventTypes = typesData;
           } else {
-            console.warn('Received empty event types array or non-array response');
+            console.warn('Received non-array response for event types');
           }
         } catch (error) {
           console.error('Failed to fetch event types:', error);
-          // Return early since we need event types for the form
-          alert('Failed to load event types. Please try again later.');
-          return;
+          // Don't alert and return, allow form to load, user can type new type
         }
         
-        // If editing, fetch event details
         if (isEditMode) {
           const eventData = await networkingService.getEvent(id);
           console.log('Loaded event data:', eventData);
           
+          const currentEventTypeId = eventData.event_type ? (eventData.event_type.id || eventData.event_type) : '';
+          let currentEventTypeName = '';
+          if (currentEventTypeId) {
+            const foundType = fetchedEventTypes.find(et => et.id === currentEventTypeId);
+            if (foundType) {
+              currentEventTypeName = foundType.name;
+            }
+          }
+
           setFormData({
             name: eventData.name || '',
             description: eventData.description || '',
             location: eventData.location || '',
-            event_type: eventData.event_type ? eventData.event_type.id || eventData.event_type : '',
+            event_type: currentEventTypeId, // Store ID
             date: eventData.date || moment().format('YYYY-MM-DD'),
             start_time: eventData.time ? moment(eventData.time, 'HH:mm:ss').format('HH:mm') : moment().format('HH:mm'),
             cost: eventData.cost !== null ? eventData.cost : ''
           });
+          setRawEventTypeInput(currentEventTypeName); // Set text input for editing
         }
       } catch (error) {
         console.error('Error loading form data:', error);
@@ -77,15 +84,20 @@ const EventForm = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Use the checked property for checkboxes
-    const newValue = type === 'checkbox' ? checked : value;
-    
-    console.log(`Field changed: ${name}, new value: ${newValue}`);
-    
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: newValue,
-    }));
+    if (name === 'rawEventTypeInput') {
+      setRawEventTypeInput(value);
+      // Clear the event_type ID in formData if user types, 
+      // it will be resolved on submit or if they select from a datalist later
+      setFormData(prevData => ({
+        ...prevData,
+        event_type: '' 
+      }));
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
 
   /**
@@ -170,28 +182,26 @@ const EventForm = () => {
             </div>
             
             <div>
-              <label className="block mb-1">
+              <label className="block mb-1" htmlFor="rawEventTypeInput">
                 Event Type*
               </label>
-              {eventTypes.length > 0 ? (
-              <select
-                name="event_type"
-                value={formData.event_type}
+              <input
+                type="text"
+                id="rawEventTypeInput" 
+                name="rawEventTypeInput"
+                value={rawEventTypeInput}
                 onChange={handleChange}
-                  required
+                required
                 className="w-full border-2 border-gray-400 p-2"
-              >
-                <option value="">Select Type</option>
-                {eventTypes.map(type => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                ))}
-              </select>
-              ) : (
-                <div className="border-2 border-gray-400 p-2 bg-gray-100">
-                  Loading event types...
-                </div>
+                placeholder="Type or select event type"
+                list="event-types-datalist" // For autocompletion if desired
+              />
+              {eventTypes.length > 0 && (
+                <datalist id="event-types-datalist">
+                  {eventTypes.map(type => (
+                    <option key={type.id} value={type.name} />
+                  ))}
+                </datalist>
               )}
             </div>
             

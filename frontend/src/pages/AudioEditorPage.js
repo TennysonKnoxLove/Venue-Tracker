@@ -105,7 +105,7 @@ const AudioEditorPage = () => {
         }
       } catch (err) {
         console.error("Error uploading audio file:", err);
-        setError("Failed to upload audio file. Please try again.");
+        setError("Failed to upload audio file. Could be too large, or an incorrect format. Please try again.");
       } finally {
         setIsUploading(false);
         // Reset the file input
@@ -175,8 +175,23 @@ const AudioEditorPage = () => {
   // Audio playback controls
   const handlePlay = () => {
     if (audioRef.current) {
-      audioRef.current.play();
-      setIsPlaying(true);
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(_ => {
+          // Automatic playback started!
+          setIsPlaying(true);
+        })
+        .catch(error => {
+          // Auto-play was prevented
+          // Show a UI element to let the user manually start playback
+          console.error("Audio playback error:", error);
+          setError("Failed to play audio. Please check the file or network.");
+          setIsPlaying(false);
+        });
+      } else {
+        // Fallback for browsers that don't return a promise from play()
+        // In this case, we rely on the onPlay/onPause events of the audio element
+      }
     }
   };
   
@@ -291,6 +306,11 @@ const AudioEditorPage = () => {
           onEnded={() => setIsPlaying(false)}
           onPause={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
+          onError={(e) => {
+            console.error("Audio element error:", e);
+            setError("Error playing audio file. It might be corrupted or inaccessible.");
+            setIsPlaying(false);
+          }}
         />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -431,7 +451,7 @@ const AudioEditorPage = () => {
                   </div>
                   <div className="text-center mt-2">
                     <p className="text-sm">Playing: {selectedFile.title}</p>
-                    <p className="text-xs">Duration: {selectedFile.duration.toFixed(1)}s</p>
+                    <p className="text-xs">Duration: {typeof selectedFile.duration === 'number' ? selectedFile.duration.toFixed(1) : 'N/A'}s</p>
                   </div>
                 </div>
               ) : (

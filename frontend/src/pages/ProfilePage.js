@@ -22,6 +22,17 @@ const ProfilePage = () => {
     'Indie', 'Soul', 'Blues', 'Reggae', 'Disco', 'House'
   ];
   
+  // Helper function to ensure URL has a scheme
+  const getFullUrl = (url) => {
+    if (!url) {
+      return '#'; // Fallback for empty URLs
+    }
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return 'https://' + url;
+  };
+  
   // Load profile data
   useEffect(() => {
     const loadProfile = async () => {
@@ -273,7 +284,7 @@ const ProfilePage = () => {
                 <div key={link.id} className="flex items-center gap-2 p-2 border-b border-gray-400">
                   <div className="flex-1 font-bold">{link.label}:</div>
                   <div className="flex-1 text-blue-600 truncate">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <a href={getFullUrl(link.url)} target="_blank" rel="noopener noreferrer">
                       {link.url}
                     </a>
                   </div>
