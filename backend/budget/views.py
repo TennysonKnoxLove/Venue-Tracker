@@ -27,14 +27,6 @@ class ExpenseCategoryViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Save the user when creating a category"""
         serializer.save(user=self.request.user)
-    
-    @action(detail=True, methods=['get'])
-    def expenses(self, request, pk=None):
-        """Get expenses for a specific category"""
-        category = self.get_object()
-        expenses = Expense.objects.filter(user=request.user, category=category)
-        serializer = ExpenseSerializer(expenses, many=True, context={'request': request})
-        return Response(serializer.data)
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     """ViewSet for expenses"""

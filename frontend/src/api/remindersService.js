@@ -20,36 +20,6 @@ const createCategory = async (categoryData) => {
   }
 };
 
-const updateCategory = async (id, categoryData) => {
-  try {
-    const response = await client.put(`/reminders/categories/${id}/`, categoryData);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating reminder category ${id}:`, error);
-    throw error;
-  }
-};
-
-const deleteCategory = async (id) => {
-  try {
-    await client.delete(`/reminders/categories/${id}/`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting reminder category ${id}:`, error);
-    throw error;
-  }
-};
-
-const getReminders = async (filters = {}) => {
-  try {
-    const response = await client.get('/reminders/', { params: filters });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching reminders:', error);
-    throw error;
-  }
-};
-
 const getReminder = async (id) => {
   try {
     const response = await client.get(`/reminders/${id}/`);
@@ -76,16 +46,6 @@ const updateReminder = async (id, reminderData) => {
     return response.data;
   } catch (error) {
     console.error(`Error updating reminder ${id}:`, error);
-    throw error;
-  }
-};
-
-const deleteReminder = async (id) => {
-  try {
-    await client.delete(`/reminders/${id}/`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting reminder ${id}:`, error);
     throw error;
   }
 };
@@ -167,13 +127,9 @@ const markAllNotificationsRead = async () => {
 export default {
   getCategories,
   createCategory,
-  updateCategory,
-  deleteCategory,
-  getReminders,
   getReminder,
   createReminder,
   updateReminder,
-  deleteReminder,
   completeReminder,
   getOverdueReminders,
   getUpcomingReminders,

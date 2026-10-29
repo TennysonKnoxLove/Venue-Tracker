@@ -1,14 +1,11 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, filters, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import Reminder, ReminderNotification, ReminderCategory
 from .serializers import ReminderSerializer, ReminderNotificationSerializer, ReminderCategorySerializer, ReminderDetailSerializer
 import datetime
-from django.http import JsonResponse
-from django.urls import get_resolver
-from rest_framework.permissions import AllowAny
 
 # Create your views here.
 
@@ -204,21 +201,3 @@ class ReminderCategoryViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def debug_urls(request):
-    """Debug view to list all registered URLs"""
-    resolver = get_resolver()
-    urls = []
-    for key, value in resolver.reverse_dict.items():
-        if isinstance(key, str) and ('remind' in key or 'categor' in key):
-            urls.append({
-                'name': key,
-                'pattern': str(value[0][0][0])
-            })
-    
-    return JsonResponse({
-        'urls': urls,
-        'reminders_urls': [str(p) for p in resolver.url_patterns if 'reminders' in str(p)]
-    })

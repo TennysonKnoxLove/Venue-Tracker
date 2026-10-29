@@ -58,17 +58,6 @@ const venueService = {
     }
   },
   
-  // Get venue details
-  getVenueDetails: async (venueId) => {
-    try {
-      const response = await apiClient.get(`/venues/${venueId}/`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching venue details:', error);
-      throw error;
-    }
-  },
-  
   // Create new venue
   createVenue: async (venueData) => {
     try {

@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Window = ({ title, children, className = '', showMinimize = false, showMaximize = false, showClose = false }) => {
   return (
     <div className={`window ${className}`}>

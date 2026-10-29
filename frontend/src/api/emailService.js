@@ -23,17 +23,6 @@ const emailService = {
     }
   },
   
-  // Get a specific outreach record
-  getOutreach: async (id) => {
-    try {
-      const response = await apiClient.get(`/email-generator/outreach/${id}/`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching outreach ${id}:`, error);
-      throw error;
-    }
-  },
-  
   // Delete an outreach record
   deleteOutreach: async (id) => {
     try {

@@ -1,19 +1,17 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions, viewsets, filters
 from rest_framework.decorators import action
-from .models import NetworkingSearchQuery, Event, EventType, EventAttendee, Opportunity, Milestone
+from .models import NetworkingSearchQuery, Event, EventType, Opportunity, Milestone
 from .serializers import (
     NetworkingSearchQuerySerializer, 
     EventSerializer,
     EventTypeSerializer,
-    EventAttendeeSerializer,
     OpportunitySerializer,
     MilestoneSerializer
 )
-from network.models import NetworkContact
 from utils.ai.openai_client import discover_networking
 from django.db.models import Q, Value
 from django.db import models
@@ -116,49 +114,6 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(events, many=True)
         return Response(serializer.data)
         
-    @action(detail=True, methods=['post'])
-    def add_attendee(self, request, pk=None):
-        """Add a contact as an attendee to this event"""
-        event = self.get_object()
-        contact_id = request.data.get('contact')
-        notes = request.data.get('notes', '')
-        
-        if not contact_id:
-            return Response(
-                {"error": "Contact ID is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        # Verify the contact belongs to the current user
-        contact = get_object_or_404(NetworkContact, id=contact_id, user=request.user)
-        
-        # Create or update the attendee
-        attendee, created = EventAttendee.objects.update_or_create(
-            event=event,
-            contact=contact,
-            defaults={'notes': notes}
-        )
-        
-        serializer = EventAttendeeSerializer(attendee)
-        return Response(serializer.data)
-        
-    @action(detail=True, methods=['post'])
-    def remove_attendee(self, request, pk=None):
-        """Remove a contact as an attendee from this event"""
-        event = self.get_object()
-        contact_id = request.data.get('contact')
-        
-        if not contact_id:
-            return Response(
-                {"error": "Contact ID is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        # Delete the attendee
-        EventAttendee.objects.filter(event=event, contact_id=contact_id).delete()
-        
-        return Response({"status": "attendee removed"}, status=status.HTTP_200_OK)
-
 class EventTypeViewSet(viewsets.ModelViewSet):
     """API endpoint for managing event types"""
     queryset = EventType.objects.all()
@@ -222,30 +177,6 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(opportunity)
         return Response(serializer.data)
-        
-    @action(detail=True, methods=['post'])
-    def add_milestone(self, request, pk=None):
-        """Add a milestone to this opportunity"""
-        opportunity = self.get_object()
-        milestone_data = {
-            'opportunity': opportunity.id,
-            'title': request.data.get('title'),
-            'description': request.data.get('description', ''),
-            'date': request.data.get('date'),
-            'completed': request.data.get('completed', False)
-        }
-        
-        if not milestone_data['title']:
-            return Response(
-                {"error": "Title is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        serializer = MilestoneSerializer(data=milestone_data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class MilestoneViewSet(viewsets.ModelViewSet):
     """API endpoint for managing opportunity milestones"""

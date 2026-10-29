@@ -57,17 +57,6 @@ const audioService = {
     }
   },
   
-  // Get edit history for audio file
-  getEditHistory: async (audioId) => {
-    try {
-      const response = await apiClient.get(`/audio/${audioId}/edits/`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching edit history:', error);
-      throw error;
-    }
-  },
-  
   // Delete audio file
   deleteAudio: async (audioId) => {
     try {
@@ -103,15 +92,6 @@ const audioService = {
       console.error('Error downloading audio:', error);
       throw error;
     }
-  },
-  
-  // Get download URL for processed audio (deprecated - use downloadAudio instead)
-  getDownloadUrl: (audioId) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.warn('No authentication token found for download.');
-    }
-    return `${apiClient.defaults.baseURL}/audio/${audioId}/download/`;
   }
 };
 

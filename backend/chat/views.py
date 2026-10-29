@@ -3,7 +3,6 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from django.db.models import Q
 from .models import ChatRoom, ChatRoomMember, ChatMessage
 from .serializers import (
     ChatRoomSerializer, 
@@ -51,68 +50,6 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except ChatRoom.DoesNotExist:
             return Response({"error": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=True, methods=['post'])
-    def leave(self, request, pk=None):
-        """Leave a chat room"""
-        chat_room = self.get_object()
-        
-        try:
-            member = ChatRoomMember.objects.get(chat_room=chat_room, user=request.user)
-            member.delete()
-            return Response({"message": "Successfully left the chat room"}, status=status.HTTP_200_OK)
-        except ChatRoomMember.DoesNotExist:
-            return Response(
-                {"error": "You are not a member of this chat room"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    
-    @action(detail=True, methods=['post'])
-    def add_member(self, request, pk=None):
-        """Add a user to the chat room"""
-        chat_room = self.get_object()
-        user_id = request.data.get('user_id')
-        
-        if not user_id:
-            return Response(
-                {"error": "User ID is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        # Check if user is already a member
-        if ChatRoomMember.objects.filter(chat_room=chat_room, user_id=user_id).exists():
-            return Response(
-                {"error": "User is already a member of this chat room"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        # Add user to chat room
-        member = ChatRoomMember.objects.create(chat_room=chat_room, user_id=user_id)
-        serializer = ChatRoomMemberSerializer(member)
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    @action(detail=True, methods=['post'])
-    def remove_member(self, request, pk=None):
-        """Remove a user from the chat room"""
-        chat_room = self.get_object()
-        user_id = request.data.get('user_id')
-        
-        if not user_id:
-            return Response(
-                {"error": "User ID is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        try:
-            member = ChatRoomMember.objects.get(chat_room=chat_room, user_id=user_id)
-            member.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except ChatRoomMember.DoesNotExist:
-            return Response(
-                {"error": "User is not a member of this chat room"},
-                status=status.HTTP_404_NOT_FOUND
-            )
     
     @action(detail=True, methods=['get', 'post'])
     def messages(self, request, pk=None):
@@ -180,20 +117,6 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         logger.info(f"Message created successfully with ID: {message.id}")
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    @action(detail=False, methods=['get'])
-    def unread_count(self, request):
-        """Get count of unread messages across all chat rooms"""
-        user_memberships = ChatRoomMember.objects.filter(user=request.user)
-        unread_counts = {}
-        
-        for membership in user_memberships:
-            query = Q(chat_room=membership.chat_room, timestamp__gt=membership.last_read) if membership.last_read else Q(chat_room=membership.chat_room)
-            count = ChatMessage.objects.filter(query).exclude(sender=request.user).count()
-            if count > 0:
-                unread_counts[str(membership.chat_room.id)] = count
-        
-        return Response(unread_counts)
 
     @action(detail=False, methods=['get'])
     def all_rooms(self, request):

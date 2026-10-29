@@ -1,16 +1,6 @@
 import client from './client';
 
 // EVENTS
-const getEvents = async (filters = {}) => {
-  try {
-    const response = await client.get('/networking/events/', { params: filters });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching networking events:', error);
-    throw error;
-  }
-};
-
 const getEventTypes = async () => {
   try {
     const response = await client.get('/networking/event-types/');
@@ -81,50 +71,7 @@ const getPastEvents = async () => {
   }
 };
 
-const addAttendee = async (eventId, contactId, notes = '') => {
-  try {
-    const data = { contact: contactId, notes };
-    const response = await client.post(`/networking/events/${eventId}/add_attendee/`, data);
-    return response.data;
-  } catch (error) {
-    console.error('Error adding attendee to event:', error);
-    throw error;
-  }
-};
-
-const removeAttendee = async (eventId, contactId) => {
-  try {
-    const data = { contact: contactId };
-    await client.post(`/networking/events/${eventId}/remove_attendee/`, data);
-    return true;
-  } catch (error) {
-    console.error('Error removing attendee from event:', error);
-    throw error;
-  }
-};
-
 // OPPORTUNITIES
-const getOpportunities = async (filters = {}) => {
-  try {
-    const response = await client.get('/networking/opportunities/', { params: filters });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching networking opportunities:', error);
-    throw error;
-  }
-};
-
-const searchOpportunities = async (state, city, radius) => {
-  try {
-    const data = { state, city, radius };
-    const response = await client.post('/networking/opportunities-search/', data);
-    return response.data;
-  } catch (error) {
-    console.error('Error searching for networking opportunities:', error);
-    throw error;
-  }
-};
-
 const getOpportunity = async (id) => {
   try {
     const response = await client.get(`/networking/opportunities/${id}/`);
@@ -151,16 +98,6 @@ const updateOpportunity = async (id, opportunityData) => {
     return response.data;
   } catch (error) {
     console.error(`Error updating networking opportunity ${id}:`, error);
-    throw error;
-  }
-};
-
-const deleteOpportunity = async (id) => {
-  try {
-    await client.delete(`/networking/opportunities/${id}/`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting networking opportunity ${id}:`, error);
     throw error;
   }
 };
@@ -203,68 +140,7 @@ const getClosedOpportunities = async () => {
   }
 };
 
-// MILESTONES
-const getMilestones = async (opportunityId = null) => {
-  try {
-    const params = {};
-    if (opportunityId) {
-      params.opportunity = opportunityId;
-    }
-    const response = await client.get('/networking/milestones/', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching milestones:', error);
-    throw error;
-  }
-};
-
-const addMilestone = async (opportunityId, milestoneData) => {
-  try {
-    const data = {
-      ...milestoneData,
-      opportunity: opportunityId
-    };
-    const response = await client.post(`/networking/opportunities/${opportunityId}/add_milestone/`, data);
-    return response.data;
-  } catch (error) {
-    console.error('Error adding milestone:', error);
-    throw error;
-  }
-};
-
-const toggleMilestoneCompletion = async (id) => {
-  try {
-    const response = await client.post(`/networking/milestones/${id}/toggle_completed/`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error toggling milestone ${id} completion:`, error);
-    throw error;
-  }
-};
-
-const updateMilestone = async (id, milestoneData) => {
-  try {
-    const response = await client.put(`/networking/milestones/${id}/`, milestoneData);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating milestone ${id}:`, error);
-    throw error;
-  }
-};
-
-const deleteMilestone = async (id) => {
-  try {
-    await client.delete(`/networking/milestones/${id}/`);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting milestone ${id}:`, error);
-    throw error;
-  }
-};
-
 export default {
-  // Events
-  getEvents,
   getEventTypes,
   getEvent,
   createEvent,
@@ -272,24 +148,10 @@ export default {
   deleteEvent,
   getUpcomingEvents,
   getPastEvents,
-  addAttendee,
-  removeAttendee,
-  
-  // Opportunities
-  getOpportunities,
-  searchOpportunities,
   getOpportunity,
   createOpportunity,
   updateOpportunity,
-  deleteOpportunity,
   updateOpportunityStatus,
   getActiveOpportunities,
-  getClosedOpportunities,
-  
-  // Milestones
-  getMilestones,
-  addMilestone,
-  toggleMilestoneCompletion,
-  updateMilestone,
-  deleteMilestone
+  getClosedOpportunities
 }; 

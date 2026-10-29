@@ -12,11 +12,9 @@ from urllib.parse import parse_qs
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
-from channels.security.websocket import AllowedHostsOriginValidator
 
 # Configure logging
 logger = logging.getLogger('websocket')
@@ -101,11 +99,8 @@ application = ProtocolTypeRouter({
     # Django's ASGI application for handling HTTP requests
     "http": get_asgi_application(),
     
-    # WebSocket handler with auth and validation
     "websocket": TokenAuthMiddlewareStack(
-        AuthMiddlewareStack(
-            URLRouter(websocket_urlpatterns)
-        )
+        URLRouter(websocket_urlpatterns)
     ),
 })
 

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import ArtistProfile, SocialLink
 from .serializers import ArtistProfileSerializer, SocialLinkSerializer
@@ -57,28 +57,3 @@ class SocialLinkViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         profile, created = ArtistProfile.objects.get_or_create(user=self.request.user)
         serializer.save(profile=profile)
-    
-    @action(detail=False, methods=['post'])
-    def reorder(self, request):
-        links_order = request.data.get('links_order', [])
-        if not links_order:
-            return Response(
-                {"error": "No links order provided"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        for idx, link_id in enumerate(links_order):
-            try:
-                link = SocialLink.objects.get(
-                    id=link_id, 
-                    profile__user=request.user
-                )
-                link.order = idx
-                link.save()
-            except SocialLink.DoesNotExist:
-                pass
-        
-        return Response(
-            {"success": "Links reordered successfully"},
-            status=status.HTTP_200_OK
-        )

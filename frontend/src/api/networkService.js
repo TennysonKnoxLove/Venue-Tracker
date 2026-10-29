@@ -1,15 +1,5 @@
 import client from './client';
 
-const getIndustries = async () => {
-  try {
-    const response = await client.get('/network/contacts/');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching industries:', error);
-    throw error;
-  }
-};
-
 const getConnections = async (filters = {}) => {
   try {
     const response = await client.get('/network/contacts/', { params: filters });
@@ -83,24 +73,12 @@ const createInteraction = async (connectionId, interactionData) => {
   }
 };
 
-const getConnectionsDueForFollowup = async () => {
-  try {
-    const response = await client.get('/network/contacts/');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching connections due for followup:', error);
-    throw error;
-  }
-};
-
 export default {
-  getIndustries,
   getConnections,
   getConnection,
   createConnection,
   updateConnection,
   deleteConnection,
   getInteractions,
-  createInteraction,
-  getConnectionsDueForFollowup
+  createInteraction
 }; 

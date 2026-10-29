@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 const FolderIcon = ({ name, to, selected, onClick, onNameClick }) => {
@@ -16,7 +15,6 @@ const FolderIcon = ({ name, to, selected, onClick, onNameClick }) => {
     >
       <div className="flex flex-col items-center">
         <div className="folder-icon mb-1 h-20 w-24 flex items-center justify-center">
-          {/* You can add an icon inside the folder if needed */}
         </div>
         <span 
           className="text-sm hover:text-red-500 transition-colors duration-150" 

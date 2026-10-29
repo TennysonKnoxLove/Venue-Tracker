@@ -8,7 +8,7 @@ from django.http import FileResponse
 import os
 from django.conf import settings
 from ..models import AudioFile, AudioEdit
-from ..serializers import AudioFileSerializer, AudioFileDetailSerializer, AudioEditSerializer
+from ..serializers import AudioFileSerializer, AudioFileDetailSerializer
 from ..processing import process_audio, generate_waveform_data
 import logging
 
@@ -174,14 +174,6 @@ class AudioFileViewSet(viewsets.ModelViewSet):
             AudioFileDetailSerializer(audio_file).data,
             status=status.HTTP_200_OK
         )
-    
-    @action(detail=True, methods=['get'])
-    def edits(self, request, pk=None):
-        """Get edit history for an audio file"""
-        audio_file = self.get_object()
-        edits = audio_file.edits.all()
-        serializer = AudioEditSerializer(edits, many=True)
-        return Response(serializer.data)
     
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):

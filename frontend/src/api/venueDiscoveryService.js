@@ -30,28 +30,6 @@ const venueDiscoveryService = {
     }
   },
   
-  // Get search history
-  getSearchHistory: async () => {
-    try {
-      const response = await apiClient.get('/ai/searches/');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching search history:', error);
-      throw error;
-    }
-  },
-  
-  // Get specific search results
-  getSearchResults: async (searchId) => {
-    try {
-      const response = await apiClient.get(`/ai/searches/${searchId}/`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching search results:', error);
-      throw error;
-    }
-  },
-  
   // Import venues from search results
   importVenues: async (searchId, venueIndices) => {
     try {
