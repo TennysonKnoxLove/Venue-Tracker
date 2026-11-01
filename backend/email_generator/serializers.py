@@ -4,7 +4,7 @@ from .models import VenueOutreach
 class VenueOutreachSerializer(serializers.ModelSerializer):
     class Meta:
         model = VenueOutreach
-        fields = ['id', 'venue', 'venue_name', 'email_content', 'sent_date', 'event_date', 'notes']
+        fields = ['id', 'venue_name', 'email_content', 'sent_date', 'event_date', 'notes']
         read_only_fields = ['id', 'sent_date']
 
 class EmailGenerationSerializer(serializers.Serializer):

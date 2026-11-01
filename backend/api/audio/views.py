@@ -6,10 +6,9 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 import json
 from django.http import FileResponse
 import os
-from django.conf import settings
-from ..models import AudioFile, AudioEdit
-from ..serializers import AudioFileSerializer, AudioFileDetailSerializer
-from ..processing import process_audio, generate_waveform_data
+from .models import AudioFile, AudioEdit
+from .serializers import AudioFileSerializer, AudioFileDetailSerializer
+from .processing import process_audio, generate_waveform_data
 import logging
 
 logger = logging.getLogger(__name__)

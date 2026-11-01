@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
@@ -34,18 +32,3 @@ class UserCreateSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Custom token serializer that includes user data and refresh token"""
-    
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        refresh = RefreshToken.for_user(self.user)
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
-        
-        # Add user data to response
-        user = UserSerializer(self.user).data
-        data['user'] = user
-        
-        return data 

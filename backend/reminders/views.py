@@ -1,10 +1,10 @@
-from django.shortcuts import render
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import Reminder, ReminderNotification, ReminderCategory
 from .serializers import ReminderSerializer, ReminderNotificationSerializer, ReminderCategorySerializer, ReminderDetailSerializer
+from .services import mark_completed, mark_read
 import datetime
 
 # Create your views here.
@@ -26,15 +26,6 @@ class ReminderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return reminders for the authenticated user"""
         return Reminder.objects.filter(user=self.request.user)
-    
-    def get_serializer_context(self):
-        """Pass additional context to serializer"""
-        context = super().get_serializer_context()
-        # Add user-filtered category queryset to context
-        context.update({
-            'category_queryset': ReminderCategory.objects.filter(user=self.request.user)
-        })
-        return context
     
     def create(self, request, *args, **kwargs):
         # Get the data from the request
@@ -109,7 +100,7 @@ class ReminderViewSet(viewsets.ModelViewSet):
     def complete(self, request, pk=None):
         """Mark reminder as completed"""
         reminder = self.get_object()
-        reminder.mark_completed()
+        mark_completed(reminder)
         serializer = self.get_serializer(reminder)
         return Response(serializer.data)
     
@@ -177,7 +168,7 @@ class ReminderNotificationViewSet(viewsets.ModelViewSet):
     def mark_read(self, request, pk=None):
         """Mark a notification as read"""
         notification = self.get_object()
-        notification.mark_read()
+        mark_read(notification)
         return Response({'status': 'notification marked as read'})
     
     @action(detail=False, methods=['post'])
@@ -185,7 +176,7 @@ class ReminderNotificationViewSet(viewsets.ModelViewSet):
         """Mark all notifications as read"""
         notifications = self.get_queryset().filter(read=False)
         for notification in notifications:
-            notification.mark_read()
+            mark_read(notification)
         return Response({'status': f'{notifications.count()} notifications marked as read'})
 
 class ReminderCategoryViewSet(viewsets.ModelViewSet):

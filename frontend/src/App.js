@@ -4,12 +4,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './components/layout/MainLayout';
 
 // Import auth components
-import LoginForm from './components/auth/LoginForm';
-import RegisterForm from './components/auth/RegisterForm';
-import PasswordResetRequest from './components/auth/PasswordResetRequest';
-import PasswordResetVerify from './components/auth/PasswordResetVerify';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import LoginForm from './pages/auth/LoginForm';
+import RegisterForm from './pages/auth/RegisterForm';
+import PasswordResetRequest from './pages/auth/PasswordResetRequest';
+import PasswordResetVerify from './pages/auth/PasswordResetVerify';
+import { AuthProvider } from './auth/AuthContext';
+import ProtectedRoute from './pages/auth/ProtectedRoute';
 
 // Import pages
 import HomePage from './pages/home/HomePage';
@@ -22,7 +22,7 @@ import NetworkPage from './pages/networking/NetworkPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import EmailGeneratorPage from './pages/emailgen/EmailGeneratorPage';
 import ChatPage from './pages/chat/ChatPage';
-import ChatRoom from './components/chat/ChatRoom';
+import ChatRoom from './pages/chatroom/ChatRoom';
 import BudgetPage from './pages/budget/BudgetPage';
 
 const App = () => {

@@ -31,24 +31,6 @@ code {
   justify-content: space-between;
 }
 
-.window-title-buttons {
-  display: flex;
-}
-
-.window-button {
-  width: 16px;
-  height: 16px;
-  margin-left: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #c0c0c0;
-  border: 1px solid;
-  border-color: #fff #808080 #808080 #fff;
-  font-size: 10px;
-  cursor: pointer;
-}
-
 .btn-win98 {
   background-color: #c0c0c0;
   border: 2px solid;
@@ -97,14 +79,6 @@ code {
   background-color: #fff;
 }
 
-.list-header {
-  background-color: #c0c0c0;
-  display: flex;
-  padding: 2px 8px;
-  font-weight: bold;
-  border-bottom: 1px solid #808080;
-}
-
 .list-item {
   display: flex;
   align-items: center;
@@ -115,15 +89,6 @@ code {
 .list-item:hover {
   background-color: #0a246a;
   color: white;
-}
-
-.status-bar {
-  border-top: 1px solid #808080;
-  padding: 2px 8px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  background-color: #c0c0c0;
 }
 
 /* Folder and File Icons */
@@ -178,15 +143,6 @@ label {
   font-weight: bold;
 }
 
-/* Utility classes */
-.primary {
-  color: #000080;
-}
-
-.border-primary {
-  border-color: #000080 !important;
-}
-
 /* Selected item styling */
 .selected {
   background-color: #0a246a;
@@ -221,16 +177,4 @@ label {
 /* Maximize compatibility with Tailwind CSS */
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
-
-@layer components {
-  .btn-win98 {
-    @apply inline-block px-2 py-1 text-center 
-           bg-gray-300 
-           border-t-2 border-l-2 border-white 
-           border-b-2 border-r-2 border-gray-600
-           active:border-t-2 active:border-l-2 active:border-gray-600
-           active:border-b-2 active:border-r-2 active:border-white
-           cursor-pointer;
-  }
-} 
+@tailwind utilities; 

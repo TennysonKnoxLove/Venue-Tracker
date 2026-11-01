@@ -62,7 +62,6 @@ export function useVenueDiscovery() {
         );
         setSearchResults(result.results || []);
         setCurrentSearchId(result.id);
-        console.log('Venue search results with ID:', result.id);
       } else {
         const result = await venueDiscoveryService.discoverNetworkingOpportunities(
           searchParams.state,
@@ -70,7 +69,6 @@ export function useVenueDiscovery() {
         );
         setSearchResults(result.results || []);
         setCurrentSearchId(result.id);
-        console.log('Opportunity search results with ID:', result.id);
       }
     } catch (err) {
       console.error(`Error during ${discoveryMode} discovery:`, err);
@@ -95,8 +93,6 @@ export function useVenueDiscovery() {
       const response = discoveryMode === 'venues'
         ? await venueDiscoveryService.importVenues(currentSearchId, [index])
         : await venueDiscoveryService.importOpportunities(currentSearchId, [index]);
-
-      console.log(`Import ${discoveryMode === 'venues' ? 'venue' : 'opportunity'} response:`, response);
 
       if (response.total_imported > 0) {
         showAlertMessage(`${itemLabel} "${itemName}" saved to your collection.`);

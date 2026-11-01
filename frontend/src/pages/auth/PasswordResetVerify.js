@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../../api/authService';
-import Window from '../layout/Window';
-import Button from '../layout/Button';
+import Window from '../../components/layout/Window';
+import Button from '../../components/layout/Button';
 
 const PasswordResetVerify = () => {
   const [email, setEmail] = useState('');

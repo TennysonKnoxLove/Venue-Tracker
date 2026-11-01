@@ -34,8 +34,3 @@ class Expense(models.Model):
     
     def __str__(self):
         return f"${self.amount} - {self.description} ({self.date})"
-    
-    @property
-    def month_year(self):
-        """Return month and year string for grouping expenses"""
-        return self.date.strftime('%B %Y')

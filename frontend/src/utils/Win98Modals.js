@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom';
-import Win98Modal from '../components/layout/Win98Modal';
+import Win98Modal from '../components/layout/Win98Modal/Win98Modal';
 
 // Root element for modal rendering
 let modalRoot = null;

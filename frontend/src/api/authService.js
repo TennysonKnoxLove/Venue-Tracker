@@ -12,11 +12,6 @@ const authService = {
       // Save token to localStorage
       if (response.data.access) {
         localStorage.setItem('authToken', response.data.access);
-        
-        // If there's a refresh token, save it too
-        if (response.data.refresh) {
-          localStorage.setItem('refreshToken', response.data.refresh);
-        }
       }
       
       return response.data;

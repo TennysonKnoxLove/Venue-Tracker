@@ -35,7 +35,9 @@ const OpportunityResult = ({ opportunity, index, saved, onSave }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
       <p><strong>Organization:</strong> {opportunity.organization}</p>
       <p><strong>Location:</strong> {opportunity.location}</p>
-      <p><strong>Deadline:</strong> {opportunity.deadline}</p>
+      {opportunity.deadline && (
+        <p><strong>Deadline:</strong> {opportunity.deadline}</p>
+      )}
       <p><strong>Type:</strong> {opportunity.opportunity_type}</p>
       {opportunity.website && (
         <p><strong>Website:</strong> <a href={opportunity.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{opportunity.website}</a></p>

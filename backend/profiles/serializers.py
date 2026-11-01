@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import URLValidator
 from rest_framework import serializers
 from .models import ArtistProfile, SocialLink
 
@@ -8,6 +10,16 @@ class SocialLinkSerializer(serializers.ModelSerializer):
         model = SocialLink
         fields = ['id', 'label', 'url', 'order']
         read_only_fields = ['id', 'order']
+
+    def validate_url(self, value):
+        value = value.strip()
+        if value and not value.startswith(('http://', 'https://')):
+            value = f'https://{value}'
+        try:
+            URLValidator()(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages)
+        return value
 
 class ArtistProfileSerializer(serializers.ModelSerializer):
     social_links = SocialLinkSerializer(many=True, read_only=True)

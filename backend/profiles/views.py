@@ -1,11 +1,8 @@
-from django.shortcuts import render
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import ArtistProfile, SocialLink
 from .serializers import ArtistProfileSerializer, SocialLinkSerializer
-
-# Create your views here.
 
 class ArtistProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ArtistProfileSerializer
@@ -32,20 +29,9 @@ class ArtistProfileViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
-@api_view(['PATCH'])
-@permission_classes([permissions.IsAuthenticated])
-def update_profile(request):
-    """
-    Dedicated endpoint for updating user profile with PATCH method
-    """
-    user = request.user
-    profile, created = ArtistProfile.objects.get_or_create(user=user)
-    
-    serializer = ArtistProfileSerializer(profile, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['patch'], url_path='update')
+    def update_current(self, request):
+        return self.partial_update(request)
 
 class SocialLinkViewSet(viewsets.ModelViewSet):
     serializer_class = SocialLinkSerializer

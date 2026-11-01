@@ -1,7 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -32,13 +30,3 @@ class SocialLink(models.Model):
         
     def __str__(self):
         return f"{self.label} - {self.profile.artist_name}"
-    
-    def clean(self):
-        # Ensure URL has a scheme if it doesn't already.
-        # The serializer's validate_url should handle this first, 
-        # but this is a fallback for model-level operations.
-        if self.url and not (self.url.startswith('http://') or self.url.startswith('https://')):
-            self.url = f"https://{self.url}"
-        # The URLField itself will perform validation using URLValidator.
-        # No need to explicitly call it again here unless for very custom logic.
-        super().clean() # Call parent's clean method

@@ -14,7 +14,6 @@ const EventDetail = () => {
       try {
         setLoading(true);
         const data = await networkingService.getEvent(id);
-        console.log('Fetched event data:', data);
         setEvent(data);
       } catch (error) {
         console.error('Error fetching event:', error);

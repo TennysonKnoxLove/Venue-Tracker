@@ -1,15 +1,9 @@
 from rest_framework import serializers
-from .models import NetworkingSearchQuery, EventType, Event, EventAttendee, Opportunity, Milestone
+from .models import EventType, Event, EventAttendee, Opportunity
 from network.serializers import NetworkContactSerializer
 import logging
 
 logger = logging.getLogger(__name__)
-
-class NetworkingSearchQuerySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NetworkingSearchQuery
-        fields = ['id', 'state', 'city', 'radius', 'results', 'created_at']
-        read_only_fields = ['id', 'created_at']
 
 class EventTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,18 +50,10 @@ class EventSerializer(serializers.ModelSerializer):
         logger.debug(f"Validating event data: {data}")
         return data
 
-class MilestoneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Milestone
-        fields = ['id', 'opportunity', 'title', 'description', 'date', 'completed', 'created_at']
-        read_only_fields = ['id', 'created_at']
-
 class OpportunitySerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     type_display = serializers.CharField(source='get_opportunity_type_display', read_only=True)
     contact_details = NetworkContactSerializer(source='contact', read_only=True)
-    milestones = MilestoneSerializer(many=True, read_only=True)
-    milestones_count = serializers.SerializerMethodField()
     is_active = serializers.BooleanField(read_only=True)
     is_closed = serializers.BooleanField(read_only=True)
     
@@ -81,10 +67,6 @@ class OpportunitySerializer(serializers.ModelSerializer):
             'contact', 'contact_details',
             'notes', 'status', 'status_display',
             'is_active', 'is_closed',
-            'milestones', 'milestones_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def get_milestones_count(self, obj):
-        return obj.milestones.count() 

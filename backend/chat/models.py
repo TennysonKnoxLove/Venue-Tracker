@@ -15,7 +15,6 @@ class ChatRoomMember(models.Model):
     chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='members')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_rooms')
     joined_at = models.DateTimeField(auto_now_add=True)
-    last_read = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         unique_together = ['chat_room', 'user']

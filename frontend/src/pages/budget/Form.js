@@ -93,7 +93,7 @@ export function getFormActions({
 
   const handleToggleReceipt = () => {
     setKeepReceipt(!keepReceipt);
-  }; // Is this used?
+  }; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,10 +107,6 @@ export function getFormActions({
       data.append('date', formData.date);
 
       if (editMode) {
-        if (!keepReceipt) {
-          data.append('remove_receipt', 'true');
-        }
-
         if (formData.receipt_image) {
           data.append('receipt_image', formData.receipt_image);
         }

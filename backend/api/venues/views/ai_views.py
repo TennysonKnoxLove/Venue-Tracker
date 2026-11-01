@@ -2,94 +2,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-import json
-import logging
-from django.conf import settings
-from openai import OpenAI
 
-from ..models import AISearchQuery, State, Venue
+from utils.ai.openai_client import discover_venues
+from ..models import AISearchQuery, State
 from ..serializers import AISearchQuerySerializer, VenueSerializer
-
-logger = logging.getLogger(__name__)
-
-def discover_venues(state, city, radius):
-    """
-    Use OpenAI API to discover venues in the specified location
-    
-    Args:
-        state (str): The state name
-        city (str): The city name
-        radius (int): The radius in miles to search
-        
-    Returns:
-        list: List of venue dictionaries
-    """
-    try:
-        # Only pass the API key to the OpenAI client, ignoring any other parameters
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        
-        prompt = f"""
-        You are a knowledgeable assistant that helps find music venues for live hip-hop and R&B performances.
-        Based on the following location parameters, provide information about potential venues:
-
-        - State: {state}
-        - City: {city}
-        - Radius: {radius} miles
-
-        Please provide information in the following structured format for each venue:
-        [
-          {{
-            "name": "Venue Name",
-            "description": "Brief description of the venue",
-            "address": "Full street address",
-            "city": "City name",
-            "state": "State abbreviation",
-            "zipcode": "Zip code",
-            "phone": "Phone number if available",
-            "email": "Email if available",
-            "website": "Website URL if available",
-            "capacity": "Estimated capacity if known (number only)",
-            "genres": "Music genres typically featured"
-          }}
-        ]
-
-        Focus on venues that regularly host live music, have a stage or performance area, and would be suitable for hip-hop and R&B artists.
-        Include both well-known venues and lesser-known spots that might be open to new performers.
-        Provide up to 10 venues that match these criteria, ensuring the JSON format is valid.
-        """
-        
-        response = client.chat.completions.create(
-            model=settings.OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": "You are a venue discovery assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=settings.OPENAI_MAX_TOKENS,
-            temperature=settings.OPENAI_TEMPERATURE
-        )
-        
-        content = response.choices[0].message.content
-        
-        # Find JSON array in the response
-        json_start = content.find('[')
-        json_end = content.rfind(']') + 1
-        
-        if json_start >= 0 and json_end > 0:
-            json_str = content[json_start:json_end]
-            try:
-                venues = json.loads(json_str)
-                return venues
-            except json.JSONDecodeError:
-                logger.error(f"Invalid JSON in OpenAI response: {json_str}")
-                return []
-        else:
-            logger.error(f"No JSON array found in response: {content}")
-            return []
-            
-    except Exception as e:
-        logger.error(f"Error calling OpenAI API: {str(e)}")
-        return []
 
 class VenueDiscoveryView(APIView):
     """
@@ -143,28 +59,6 @@ class VenueDiscoveryView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class SearchHistoryListView(ListAPIView):
-    """
-    API view for listing the user's search history
-    """
-    serializer_class = AISearchQuerySerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Return only searches belonging to the authenticated user"""
-        return AISearchQuery.objects.filter(user=self.request.user)
-
-class SearchResultsDetailView(RetrieveAPIView):
-    """
-    API view for retrieving search results
-    """
-    serializer_class = AISearchQuerySerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Return only searches belonging to the authenticated user"""
-        return AISearchQuery.objects.filter(user=self.request.user)
-
 class ImportSearchResultsView(APIView):
     """
     API view for importing selected AI search results into the venue database
@@ -213,26 +107,24 @@ class ImportSearchResultsView(APIView):
                 # Get or create state
                 try:
                     state_name = venue_data.get('state', search_query.state)
-                    state_obj, created = State.objects.get_or_create(
+                    state_obj, _created = State.objects.get_or_create(
                         name=state_name,
                         user=request.user,
                         defaults={'abbreviation': state_name[:2].upper()}
                     )
                     
-                    # Create venue data
                     venue_dict = {
                         'name': venue_data.get('name', ''),
                         'description': venue_data.get('description', ''),
                         'address': venue_data.get('address', ''),
                         'city': venue_data.get('city', search_query.city),
-                        'state': state_obj.id,  # Use state ID instead of state object
+                        'state': state_obj.id,
                         'zipcode': venue_data.get('zipcode', ''),
                         'phone': venue_data.get('phone', ''),
                         'email': venue_data.get('email', ''),
                         'website': venue_data.get('website', ''),
                         'capacity': venue_data.get('capacity'),
                         'notes': venue_data.get('genres', ''),
-                        'user': request.user.id  # Add user ID explicitly
                     }
                     
                     # Try to create the venue
@@ -242,7 +134,7 @@ class ImportSearchResultsView(APIView):
                     )
                     
                     if venue_serializer.is_valid():
-                        venue = venue_serializer.save()
+                        venue_serializer.save()
                         imported_venues.append(venue_serializer.data)
                     else:
                         errors.append(f"Failed to create venue '{venue_data.get('name')}': {venue_serializer.errors}")

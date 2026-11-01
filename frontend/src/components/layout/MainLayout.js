@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Window from './Window';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../auth/AuthContext';
 import Button from './Button';
 import { remindersService } from '../../api';
 

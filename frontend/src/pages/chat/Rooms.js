@@ -57,8 +57,7 @@ export function getRoomActions({
     try {
       const room = rooms.find((entry) => entry.id === roomId);
       if (room && !room.is_member) {
-        const joinResponse = await chatService.joinRoom(roomId);
-        console.log('Room join response:', joinResponse);
+        await chatService.joinRoom(roomId);
       }
 
       navigate(`/chat/${roomId}`);

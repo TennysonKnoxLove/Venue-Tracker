@@ -31,41 +31,22 @@ Focus on venues that regularly host live music, have a stage or performance area
 Provide up to 10 venues that match these criteria, ensuring the JSON format is valid.
 """
 
-NETWORKING_OPPORTUNITIES_PROMPT = """
-You are a knowledgeable assistant that helps find networking opportunities for musicians and music industry professionals.
-Based on the following location parameters, provide information about potential networking events and opportunities:
+VENUE_OUTREACH_EMAIL_PROMPT = """
+Write a professional cold email to {venue_name} from {artist_name}, inquiring about
+potential performance opportunities. You MUST use ALL of the following information in the email:
 
-- State: {state}
-- City: {city}
-- Radius: {radius} miles
+Artist Name: {artist_name}
+Music Genres: {genres}
+Bio: {bio}
+{extra_details}
 
-Please provide information in the following structured format for each opportunity:
-```json
-[
-  {{
-    "name": "Event/Opportunity Name",
-    "description": "Brief description of the opportunity",
-    "type": "Event Type (e.g. Conference, Open Mic, Meetup, Workshop)",
-    "address": "Full street address if available",
-    "city": "City name",
-    "state": "State abbreviation",
-    "date": "Date of event if applicable (YYYY-MM-DD format, or 'Recurring' with details)",
-    "time": "Time of event if applicable",
-    "cost": "Cost information if applicable",
-    "website": "Website URL if available",
-    "contact": "Contact information if available"
-  }},
-  // Additional opportunities...
-]
-```
+The email MUST include ALL of the following elements:
+- A strong introduction of the artist using their bio information
+- Clear expression of interest in performing at the venue
+- Detailed mention of musical style/genres and any achievements from the bio
+- Request for information about booking process
+- Professional closing with contact information (email and phone if provided)
+- All provided social media links formatted clearly in the email signature
 
-Focus on industry-specific networking opportunities such as:
-- Music industry conferences and meetups
-- Producer/artist networking events
-- Open mic nights with industry attendance
-- Music workshops and masterclasses
-- Industry showcases
-- Artist collectives or group meetings
-
-Provide up to 10 opportunities that match these criteria, ensuring the JSON format is valid.
+Format as plain text email and make sure to incorporate EVERY piece of information provided above.
 """ 

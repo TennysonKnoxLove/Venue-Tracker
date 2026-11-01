@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../api/authService';
-import Window from '../layout/Window';
-import Button from '../layout/Button';
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({

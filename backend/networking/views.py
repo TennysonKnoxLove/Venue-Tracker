@@ -1,60 +1,13 @@
-from django.shortcuts import render
 from django.utils import timezone
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions, viewsets, filters
 from rest_framework.decorators import action
-from .models import NetworkingSearchQuery, Event, EventType, Opportunity, Milestone
+from .models import Event, EventType, Opportunity
 from .serializers import (
-    NetworkingSearchQuerySerializer, 
     EventSerializer,
     EventTypeSerializer,
     OpportunitySerializer,
-    MilestoneSerializer
 )
-from utils.ai.openai_client import discover_networking
-from django.db.models import Q, Value
-from django.db import models
-import logging
-
-logger = logging.getLogger(__name__)
-
-# Create your views here.
-
-class NetworkingDiscoveryView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def post(self, request):
-        state = request.data.get('state')
-        city = request.data.get('city')
-        radius = request.data.get('radius')
-        
-        if not all([state, city, radius]):
-            return Response(
-                {"error": "State, city, and radius are required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        # Call OpenAI API for networking suggestions
-        opportunities = discover_networking(state, city, radius)
-        
-        # Save the search query and results
-        search_query = NetworkingSearchQuery.objects.create(
-            user=request.user,
-            state=state,
-            city=city,
-            radius=radius,
-            results=opportunities
-        )
-        
-        serializer = NetworkingSearchQuerySerializer(search_query)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-    def get(self, request):
-        """Get user's previous networking searches"""
-        searches = NetworkingSearchQuery.objects.filter(user=request.user)
-        serializer = NetworkingSearchQuerySerializer(searches, many=True)
-        return Response(serializer.data)
 
 class EventViewSet(viewsets.ModelViewSet):
     """API endpoint for managing networking events"""
@@ -69,34 +22,7 @@ class EventViewSet(viewsets.ModelViewSet):
         return Event.objects.filter(user=self.request.user)
         
     def perform_create(self, serializer):
-        """Override to add debugging for date and time data"""
-        logger.info(f"Creating event with data: {serializer.validated_data}")
-        # Log specific date/time fields for debugging
-        if 'date' in serializer.validated_data:
-            logger.info(f"Date field: {serializer.validated_data['date']}")
-        if 'time' in serializer.validated_data:
-            logger.info(f"Time field: {serializer.validated_data['time']}")
-        if 'start_date' in serializer.validated_data:
-            logger.info(f"Start date field: {serializer.validated_data['start_date']}")
-        if 'end_date' in serializer.validated_data:
-            logger.info(f"End date field: {serializer.validated_data['end_date']}")
-            
         serializer.save(user=self.request.user)
-    
-    def update(self, request, *args, **kwargs):
-        """Override to add debugging for date and time data"""
-        logger.info(f"Updating event with data: {request.data}")
-        # Log specific date/time fields for debugging
-        if 'date' in request.data:
-            logger.info(f"Date field: {request.data['date']}")
-        if 'time' in request.data:
-            logger.info(f"Time field: {request.data['time']}")
-        if 'start_date' in request.data:
-            logger.info(f"Start date field: {request.data['start_date']}")
-        if 'end_date' in request.data:
-            logger.info(f"End date field: {request.data['end_date']}")
-            
-        return super().update(request, *args, **kwargs)
     
     @action(detail=False, methods=['get'])
     def upcoming(self, request):
@@ -113,7 +39,7 @@ class EventViewSet(viewsets.ModelViewSet):
         events = self.get_queryset().filter(date__lt=today).order_by('-date', 'time')
         serializer = self.get_serializer(events, many=True)
         return Response(serializer.data)
-        
+
 class EventTypeViewSet(viewsets.ModelViewSet):
     """API endpoint for managing event types"""
     queryset = EventType.objects.all()
@@ -176,31 +102,4 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         opportunity.save()
         
         serializer = self.get_serializer(opportunity)
-        return Response(serializer.data)
-
-class MilestoneViewSet(viewsets.ModelViewSet):
-    """API endpoint for managing opportunity milestones"""
-    serializer_class = MilestoneSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['date', 'created_at']
-    
-    def get_queryset(self):
-        """Return milestones for the current user's opportunities"""
-        opportunity_id = self.request.query_params.get('opportunity')
-        queryset = Milestone.objects.filter(opportunity__user=self.request.user)
-        
-        if opportunity_id:
-            queryset = queryset.filter(opportunity_id=opportunity_id)
-            
-        return queryset
-        
-    @action(detail=True, methods=['post'])
-    def toggle_completed(self, request, pk=None):
-        """Toggle the completed status of a milestone"""
-        milestone = self.get_object()
-        milestone.completed = not milestone.completed
-        milestone.save()
-        
-        serializer = self.get_serializer(milestone)
         return Response(serializer.data)

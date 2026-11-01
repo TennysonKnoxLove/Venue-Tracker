@@ -11,15 +11,12 @@ services:
       - .env
     depends_on:
       - db
-      - redis
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/venue_tracker
       - DJANGO_SETTINGS_MODULE=settings
       - DEBUG=${DEBUG}
       - ALLOWED_HOSTS=*
       - CORS_ALLOW_ALL_ORIGINS=True
-      - WS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-      - REDIS_URL=redis://redis:6379/0
       - PYTHONUNBUFFERED=1
       - DJANGO_LOG_LEVEL=INFO
       - EMAIL_HOST=${EMAIL_HOST}
@@ -59,13 +56,5 @@ services:
     ports:
       - "5432:5432"
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
 volumes:
-  postgres_data:
-  redis_data: 
+  postgres_data: 

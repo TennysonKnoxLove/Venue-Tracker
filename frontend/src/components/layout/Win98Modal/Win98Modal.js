@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
 import './Win98Modal.css';
 
 const Win98Modal = ({
@@ -106,21 +105,6 @@ const Win98Modal = ({
       </div>
     </div>
   );
-};
-
-Win98Modal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  type: PropTypes.oneOf(['alert', 'confirm', 'prompt']),
-  title: PropTypes.string,
-  message: PropTypes.string.isRequired,
-  icon: PropTypes.oneOf(['info', 'warning', 'error', 'question']),
-  confirmText: PropTypes.string,
-  cancelText: PropTypes.string,
-  onClose: PropTypes.func.isRequired,
-  onConfirm: PropTypes.func,
-  inputLabel: PropTypes.string,
-  inputValue: PropTypes.string,
-  onInputChange: PropTypes.func,
 };
 
 export default Win98Modal; 

@@ -4,7 +4,7 @@ from .models import Reminder, ReminderNotification, ReminderCategory
 class ReminderCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ReminderCategory
-        fields = ['id', 'name', 'color', 'icon', 'user']
+        fields = ['id', 'name', 'color', 'user']
         read_only_fields = ['user']
         
     def create(self, validated_data):
@@ -42,7 +42,6 @@ class ReminderSerializer(serializers.ModelSerializer):
         """Set the user from the request context"""
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
-
 class ReminderDetailSerializer(ReminderSerializer):
     notifications = ReminderNotificationSerializer(many=True, read_only=True)
     

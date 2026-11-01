@@ -3,16 +3,11 @@ from .models import Expense, ExpenseCategory
 
 class ExpenseCategorySerializer(serializers.ModelSerializer):
     """Serializer for expense categories"""
-    expense_count = serializers.SerializerMethodField()
     
     class Meta:
         model = ExpenseCategory
-        fields = ['id', 'name', 'color', 'expense_count', 'created_at']
+        fields = ['id', 'name', 'color', 'created_at']
         read_only_fields = ['created_at']
-    
-    def get_expense_count(self, obj):
-        """Get the number of expenses in this category"""
-        return obj.expenses.count()
 
 class ExpenseSerializer(serializers.ModelSerializer):
     """Serializer for expenses"""
@@ -31,9 +26,3 @@ class ExpenseSerializer(serializers.ModelSerializer):
         if obj.receipt_image:
             return self.context['request'].build_absolute_uri(obj.receipt_image.url)
         return None
-
-class ExpenseDetailSerializer(ExpenseSerializer):
-    """Detailed serializer for a single expense"""
-    
-    class Meta(ExpenseSerializer.Meta):
-        fields = ExpenseSerializer.Meta.fields 

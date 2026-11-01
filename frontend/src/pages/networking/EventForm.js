@@ -31,9 +31,7 @@ const EventForm = () => {
         setLoading(true);
         let fetchedEventTypes = [];
         try {
-          console.log('Fetching event types...');
           const typesData = await networkingService.getEventTypes();
-          console.log('Received event types:', typesData);
           
           if (Array.isArray(typesData)) { // Allow empty array
             setEventTypes(typesData);
@@ -48,7 +46,6 @@ const EventForm = () => {
         
         if (isEditMode) {
           const eventData = await networkingService.getEvent(id);
-          console.log('Loaded event data:', eventData);
           
           const currentEventTypeId = eventData.event_type ? (eventData.event_type.id || eventData.event_type) : '';
           let currentEventTypeName = '';
@@ -128,14 +125,11 @@ const EventForm = () => {
       // Remove start_time as it's not in the database model
       delete eventData.start_time;
       
-      console.log('Submitting event data:', eventData);
-      
-      // Make API request (create or update)
-      const response = isEditMode
-        ? await networkingService.updateEvent(id, eventData)
-        : await networkingService.createEvent(eventData);
-      
-      console.log('API response:', response);
+      if (isEditMode) {
+        await networkingService.updateEvent(id, eventData);
+      } else {
+        await networkingService.createEvent(eventData);
+      }
       
       // Navigate to event list on success
       navigate('/networking');

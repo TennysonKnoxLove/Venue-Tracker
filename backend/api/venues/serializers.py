@@ -16,18 +16,15 @@ class StateSerializer(serializers.ModelSerializer):
 
 class VenueSerializer(serializers.ModelSerializer):
     """Serializer for Venue model"""
-    state_name = serializers.CharField(source='state.name', read_only=True)
-    state_abbreviation = serializers.CharField(source='state.abbreviation', read_only=True)
     
     class Meta:
         model = Venue
         fields = [
-            'id', 'name', 'description', 'address', 'city', 'state', 'state_id', 
-            'state_name', 'state_abbreviation', 'zipcode', 'phone', 'email', 
-            'website', 'capacity', 'open_time', 'close_time', 'notes', 
-            'created_at', 'updated_at', 'user_id'
+            'id', 'name', 'description', 'address', 'city', 'state', 'state_id',
+            'zipcode', 'phone', 'email', 'website', 'capacity', 'open_time',
+            'close_time', 'notes', 'created_at', 'updated_at', 'user_id'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'state_name', 'state_abbreviation']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
     
     def create(self, validated_data):
         # Ensure the venue is associated with the current user

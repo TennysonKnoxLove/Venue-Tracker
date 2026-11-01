@@ -11,37 +11,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ChatMessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    sender_id = serializers.IntegerField(write_only=True, required=False)
-    username = serializers.SerializerMethodField()
-    message = serializers.SerializerMethodField()
     
     class Meta:
         model = ChatMessage
-        fields = ['id', 'chat_room', 'sender', 'sender_id', 'content', 'timestamp', 'username', 'message']
-        read_only_fields = ['id', 'timestamp', 'username', 'message']
-    
-    def get_username(self, obj):
-        return obj.sender.username if obj.sender else None
-    
-    def get_message(self, obj):
-        return obj.content
-    
-    def create(self, validated_data):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['sender'] = request.user
-        
-        if 'sender_id' in validated_data:
-            del validated_data['sender_id']
-            
-        return super().create(validated_data)
+        fields = ['id', 'chat_room', 'sender', 'content', 'timestamp']
+        read_only_fields = ['id', 'timestamp']
 
 class ChatRoomMemberSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     
     class Meta:
         model = ChatRoomMember
-        fields = ['id', 'chat_room', 'user', 'joined_at', 'last_read']
+        fields = ['id', 'chat_room', 'user', 'joined_at']
         read_only_fields = ['id', 'joined_at']
 
 class ChatRoomSerializer(serializers.ModelSerializer):
@@ -51,12 +32,3 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         model = ChatRoom
         fields = ['id', 'name', 'created_at', 'updated_at', 'members']
         read_only_fields = ['id', 'created_at', 'updated_at']
-        
-class ChatRoomDetailSerializer(serializers.ModelSerializer):
-    members = ChatRoomMemberSerializer(many=True, read_only=True)
-    messages = ChatMessageSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = ChatRoom
-        fields = ['id', 'name', 'created_at', 'updated_at', 'members', 'messages']
-        read_only_fields = ['id', 'created_at', 'updated_at'] 

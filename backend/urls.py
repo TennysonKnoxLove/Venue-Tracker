@@ -40,8 +40,6 @@ urlpatterns = [
     path('api/notifications/', ReminderNotificationViewSet.as_view({'get': 'list'}), name='notifications-list'),
     path('api/notifications/mark_all_read/', ReminderNotificationViewSet.as_view({'post': 'mark_all_read'}), name='notifications-mark-all-read'),
     path('api/notifications/<int:pk>/mark_read/', ReminderNotificationViewSet.as_view({'post': 'mark_read'}), name='notifications-mark-read'),
-    
-    # WebSocket URLs are handled by ASGI in asgi.py
 ]
 
 # Serve media files in development

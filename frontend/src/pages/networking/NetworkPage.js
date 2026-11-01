@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
-import ConnectionList from '../../components/network/ConnectionList';
-import ConnectionDetail from '../../components/network/ConnectionDetail';
-import ConnectionForm from '../../components/network/ConnectionForm';
+import ConnectionList from './ConnectionList';
+import ConnectionDetail from './ConnectionDetail';
+import ConnectionForm from './ConnectionForm';
 
 const NetworkPage = () => {
   return (

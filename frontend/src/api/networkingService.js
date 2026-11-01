@@ -104,7 +104,6 @@ const updateOpportunity = async (id, opportunityData) => {
 
 const updateOpportunityStatus = async (id, status) => {
   try {
-    console.log('Updating opportunity status to:', status);
     // Check if the status is valid based on backend error message
     const validStatuses = ['active', 'interviewing', 'offer_received', 'accepted', 'declined', 'closed'];
     if (!validStatuses.includes(status)) {

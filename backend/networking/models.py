@@ -2,23 +2,6 @@ from django.db import models
 from django.conf import settings
 from network.models import NetworkContact
 
-# Create your models here.
-
-class NetworkingSearchQuery(models.Model):
-    """Stores networking opportunity search queries and results from AI"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='networking_searches')
-    state = models.CharField(max_length=50)
-    city = models.CharField(max_length=100)
-    radius = models.IntegerField()
-    results = models.JSONField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['-created_at']
-        
-    def __str__(self):
-        return f"Networking search near {self.city}, {self.state} ({self.radius} miles)"
-
 class EventType(models.Model):
     """Types of networking events"""
     name = models.CharField(max_length=50, unique=True)
@@ -106,18 +89,3 @@ class Opportunity(models.Model):
     @property
     def is_closed(self):
         return self.status in ['accepted', 'declined', 'closed']
-
-class Milestone(models.Model):
-    """Milestones for tracking progress on opportunities"""
-    opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE, related_name='milestones')
-    title = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    date = models.DateField(null=True, blank=True)
-    completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['date', 'created_at']
-        
-    def __str__(self):
-        return f"{self.title} for {self.opportunity.title}"

@@ -8,7 +8,6 @@ import networkingService from './networkingService';
 import chatService from './chatService';
 import budgetService from './budgetService';
 import emailService from './emailService';
-import apiClient from './client';
 
 export {
   authService,
@@ -21,5 +20,4 @@ export {
   chatService,
   budgetService,
   emailService,
-  apiClient
 }; 

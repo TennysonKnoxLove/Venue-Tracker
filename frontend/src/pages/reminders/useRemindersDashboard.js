@@ -8,7 +8,6 @@ export function useRemindersDashboard() {
   const [todayReminders, setTodayReminders] = useState([]);
   const [upcomingReminders, setUpcomingReminders] = useState([]);
   const [overdueReminders, setOverdueReminders] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [completingReminder, setCompletingReminder] = useState(null);
   const [snoozingReminder, setSnoozingReminder] = useState(null);
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
@@ -33,19 +32,9 @@ export function useRemindersDashboard() {
     }
   }, []);
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const data = await remindersService.getNotifications(false);
-      setNotifications(data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  }, []);
-
   useEffect(() => {
     fetchAllReminders();
-    fetchNotifications();
-  }, [fetchAllReminders, fetchNotifications]);
+  }, [fetchAllReminders]);
 
   const handleMarkReminderComplete = async (reminderId) => {
     try {
@@ -98,40 +87,16 @@ export function useRemindersDashboard() {
     setSnoozingReminder(null);
   };
 
-  const handleMarkAllNotificationsRead = async () => {
-    try {
-      await remindersService.markAllNotificationsRead();
-      setNotifications([]);
-      modalService.alert('All notifications marked as read', 'Notifications', 'info');
-    } catch (error) {
-      console.error('Error marking notifications as read:', error);
-      modalService.alert('Failed to mark notifications as read', 'Error', 'error');
-    }
-  };
-
-  const handleMarkNotificationRead = async (notificationId) => {
-    try {
-      await remindersService.markNotificationRead(notificationId);
-      setNotifications(notifications.filter(notification => notification.id !== notificationId));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      modalService.alert('Failed to mark notification as read', 'Error', 'error');
-    }
-  };
-
   return {
     loading,
     todayReminders,
     upcomingReminders,
     overdueReminders,
-    notifications,
     completingReminder,
     showSnoozeOptions,
     handleMarkReminderComplete,
     handleSnoozeReminder,
     confirmSnooze,
     cancelSnooze,
-    handleMarkAllNotificationsRead,
-    handleMarkNotificationRead,
   };
 }

@@ -21,7 +21,6 @@ const EventsDashboard = () => {
         networkingService.getPastEvents()
       ]);
       
-      console.log('Upcoming events:', upcomingData);
       setUpcomingEvents(upcomingData);
       setPastEvents(pastData);
     } catch (error) {

@@ -47,8 +47,6 @@ export const AuthProvider = ({ children }) => {
       
       // Get user data
       const userData = await authService.getCurrentUser();
-      localStorage.setItem('user', JSON.stringify(userData));
-      
       setUser(userData);
     } catch (error) {
       console.error('Login failed:', error);

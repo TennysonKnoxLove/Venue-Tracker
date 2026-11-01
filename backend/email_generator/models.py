@@ -6,7 +6,6 @@ from django.conf import settings
 class VenueOutreach(models.Model):
     """Tracks email outreach to venues"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='outreach')
-    venue = models.ForeignKey('venues.Venue', on_delete=models.CASCADE, related_name='outreach_history', null=True, blank=True)
     venue_name = models.CharField(max_length=100)
     email_content = models.TextField()
     sent_date = models.DateTimeField(auto_now_add=True)

@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRemindersDashboard } from './useRemindersDashboard';
 import ReminderList from './ReminderList';
-import NotificationMenu from './NotificationMenu';
 import SnoozeDialog from './SnoozeDialog';
 
 const RemindersDashboard = () => {
@@ -10,15 +9,12 @@ const RemindersDashboard = () => {
     todayReminders,
     upcomingReminders,
     overdueReminders,
-    notifications,
     completingReminder,
     showSnoozeOptions,
     handleMarkReminderComplete,
     handleSnoozeReminder,
     confirmSnooze,
     cancelSnooze,
-    handleMarkAllNotificationsRead,
-    handleMarkNotificationRead,
   } = useRemindersDashboard();
 
   if (loading) {
@@ -43,11 +39,6 @@ const RemindersDashboard = () => {
           )}
         </div>
         <div className="flex space-x-2">
-          <NotificationMenu
-            notifications={notifications}
-            onMarkAllRead={handleMarkAllNotificationsRead}
-            onMarkRead={handleMarkNotificationRead}
-          />
           <Link to="/reminders/new" className="btn-win98">
             + New Reminder
           </Link>

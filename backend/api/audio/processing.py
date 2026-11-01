@@ -2,10 +2,8 @@ from pydub import AudioSegment
 import os
 import uuid
 import tempfile
-import json
 import numpy as np
 import logging
-import math # Import math for math.isnan, or use np.isnan
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ def process_audio(file_path, edit_type, parameters):
         return output_path
         
     except Exception as e:
-        print(f"Error processing audio: {e}")
+        logger.error("Error processing audio: %s", e)
         return None
 
 def apply_trim(audio, parameters):

@@ -90,40 +90,6 @@ const getTodayReminders = async () => {
   }
 };
 
-const getNotifications = async (read = null) => {
-  try {
-    const params = {};
-    if (read !== null) {
-      params.read = read;
-    }
-    const response = await client.get('/notifications/', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    throw error;
-  }
-};
-
-const markNotificationRead = async (id) => {
-  try {
-    const response = await client.post(`/notifications/${id}/mark_read/`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error marking notification ${id} as read:`, error);
-    throw error;
-  }
-};
-
-const markAllNotificationsRead = async () => {
-  try {
-    const response = await client.post('/notifications/mark_all_read/');
-    return response.data;
-  } catch (error) {
-    console.error('Error marking all notifications as read:', error);
-    throw error;
-  }
-};
-
 export default {
   getCategories,
   createCategory,
@@ -134,7 +100,4 @@ export default {
   getOverdueReminders,
   getUpcomingReminders,
   getTodayReminders,
-  getNotifications,
-  markNotificationRead,
-  markAllNotificationsRead
 }; 

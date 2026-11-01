@@ -32,11 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'channels',
     'api.users',
     'api.venues',
     'api.audio',
-    'api.contacts',
     
     # New apps
     'network',
@@ -149,31 +147,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-# Channels configuration
-ASGI_APPLICATION = 'asgi.application'
-
-# Channel layers configuration
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-
-if os.environ.get('USE_REDIS', 'False') == 'True' or not DEBUG:
-    # Use Redis channel layer for production
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                'hosts': [REDIS_URL],
-            },
-        },
-    }
-else:
-    # Use in-memory channel layer for development
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
-
-# Configure logging for channels
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -199,21 +172,6 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
-        'channels': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'chat': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'websocket': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
     },
     'root': {
         'handlers': ['console'],
@@ -221,8 +179,16 @@ LOGGING = {
     },
 }
 
-# CORS and WebSocket settings
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
+def _csv_env(name, default):
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        raw = default
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
+
+# CORS settings
+_DEFAULT_ORIGINS = 'http://localhost:3000,http://127.0.0.1:3000'
+CORS_ALLOWED_ORIGINS = _csv_env('CORS_ALLOWED_ORIGINS', _DEFAULT_ORIGINS)
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 CORS_ALLOW_HEADERS = [
@@ -235,26 +201,13 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'sec-websocket-extensions',
-    'sec-websocket-key',
-    'sec-websocket-protocol',
-    'sec-websocket-version'
 ]
 
-# Security settings for WebSockets
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
-# Specifically for WebSockets
-WS_ALLOWED_ORIGINS = os.environ.get('WS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,ws://localhost:3000,ws://127.0.0.1:3000').split(',')
-
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
+CSRF_TRUSTED_ORIGINS = _csv_env('CSRF_TRUSTED_ORIGINS', ','.join(CORS_ALLOWED_ORIGINS))
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
-CORS_ALLOW_CREDENTIALS = True
-
-# WebSocket specific settings
-CHANNEL_SECURITY_ENABLED = False  # Set to True in production
 
 # OpenAI API Settings
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')

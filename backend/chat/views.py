@@ -1,16 +1,12 @@
-from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
 from .models import ChatRoom, ChatRoomMember, ChatMessage
 from .serializers import (
-    ChatRoomSerializer, 
-    ChatRoomDetailSerializer,
-    ChatRoomMemberSerializer, 
+    ChatRoomSerializer,
+    ChatRoomMemberSerializer,
     ChatMessageSerializer
 )
-import logging
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
     """ViewSet for chat rooms"""
@@ -20,12 +16,6 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return chat rooms that the user is a member of"""
         return ChatRoom.objects.filter(members__user=self.request.user)
-    
-    def get_serializer_class(self):
-        """Return different serializers for list and detail views"""
-        if self.action == 'retrieve':
-            return ChatRoomDetailSerializer
-        return ChatRoomSerializer
     
     def perform_create(self, serializer):
         """Create a new chat room and add the current user as a member"""
@@ -65,7 +55,6 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Create message
             message = ChatMessage.objects.create(
                 chat_room=chat_room,
                 sender=request.user,
@@ -75,48 +64,9 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             serializer = ChatMessageSerializer(message)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        # Handle GET request to fetch messages
-        else:
-            messages = ChatMessage.objects.filter(chat_room=chat_room)
-            
-            # Update last read timestamp
-            member = ChatRoomMember.objects.get(chat_room=chat_room, user=request.user)
-            member.last_read = timezone.now()
-            member.save()
-            
-            serializer = ChatMessageSerializer(messages, many=True)
-            return Response(serializer.data)
-    
-    @action(detail=False, methods=['post'], url_path='post-new-message', url_name='post_new_message')
-    def send_message(self, request, pk=None):
-        """Send a message to the chat room"""
-        logger = logging.getLogger(__name__)
-        
-        logger.info(f"Received message request for room {pk} from user {request.user.username}")
-        logger.info(f"Request data: {request.data}")
-        
-        chat_room = self.get_object()
-        content = request.data.get('content')
-        
-        if not content:
-            logger.warning(f"Missing content in message request from {request.user.username}")
-            return Response(
-                {"error": "Message content is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        logger.info(f"Creating message in room {chat_room.id} from {request.user.username}: {content[:30]}...")
-        
-        message = ChatMessage.objects.create(
-            chat_room=chat_room,
-            sender=request.user,
-            content=content
-        )
-        
-        serializer = ChatMessageSerializer(message)
-        logger.info(f"Message created successfully with ID: {message.id}")
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        messages = ChatMessage.objects.filter(chat_room=chat_room)
+        serializer = ChatMessageSerializer(messages, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def all_rooms(self, request):

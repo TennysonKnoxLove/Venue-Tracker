@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import Window from '../layout/Window';
-import Button from '../layout/Button';
+import { AuthContext } from '../../auth/AuthContext';
+import Window from '../../components/layout/Window';
+import Button from '../../components/layout/Button';
 
 const LoginForm = () => {
   const [username, setUsername] = useState('');
