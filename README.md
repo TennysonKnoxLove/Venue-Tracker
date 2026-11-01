@@ -10,14 +10,6 @@ The frontend runs at [http://localhost:3000](http://localhost:3000). The API run
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
 
-**Or run the processes yourself**
-
-- Python 3.11
-- Node.js 18
-- npm
-- ffmpeg, only if you use the audio editor (`brew install ffmpeg` on macOS)
-- PostgreSQL 14 is optional. Without `DATABASE_URL`, the API uses a local SQLite file.
-
 ## Run with Docker
 
 From the project root:
@@ -109,19 +101,19 @@ The dev server opens [http://localhost:3000](http://localhost:3000) and calls `h
 
 ## Environment variables
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `DEBUG` | Yes for local | `1` prints email to the console and serves uploaded media. Use `0` outside local development. |
-| `SECRET_KEY` | Yes in production | Django secret. A built-in insecure default is used when this is empty. |
-| `DATABASE_URL` | No | Postgres URL. Omitted means SQLite. Development Compose overrides this. |
-| `OPENAI_API_KEY` | No | Required for venue discovery and generated email. Other pages work without it. |
-| `OPENAI_MODEL` | No | Defaults to `gpt-3.5-turbo` in `.env.example`. |
-| `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | No | SMTP settings used when `DEBUG` is not `1`. |
-| `ALLOWED_HOSTS` | Yes in production | Comma-separated hostnames. Do not use `*`. |
-| `CORS_ALLOWED_ORIGINS` | Yes when the UI is on another origin | Comma-separated browser origins, such as `http://localhost:3000`. |
-| `REACT_APP_API_URL` | No | API base URL for the frontend. Defaults to `http://localhost:8000/api`. |
+| Variable                                               | Required                             | Purpose                                                                                       |
+| ------------------------------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `DEBUG`                                                | Yes for local                        | `1` prints email to the console and serves uploaded media. Use `0` outside local development. |
+| `SECRET_KEY`                                           | Yes in production                    | Django secret. A built-in insecure default is used when this is empty.                        |
+| `DATABASE_URL`                                         | No                                   | Postgres URL. Omitted means SQLite. Development Compose overrides this.                       |
+| `OPENAI_API_KEY`                                       | No                                   | Required for venue discovery and generated email. Other pages work without it.                |
+| `OPENAI_MODEL`                                         | No                                   | Defaults to `gpt-3.5-turbo` in `.env.example`.                                                |
+| `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | No                                   | SMTP settings used when `DEBUG` is not `1`.                                                   |
+| `ALLOWED_HOSTS`                                        | Yes in production                    | Comma-separated hostnames. Do not use `*`.                                                    |
+| `CORS_ALLOWED_ORIGINS`                                 | Yes when the UI is on another origin | Comma-separated browser origins, such as `http://localhost:3000`.                             |
+| `REACT_APP_API_URL`                                    | No                                   | API base URL for the frontend. Defaults to `http://localhost:8000/api`.                       |
 
-Copy `.env.example` for Compose and production. `backend/.env.example` is the same set of names with local defaults. Do not commit `.env`.
+Copy the root `.env.example` to `.env`. Docker Compose reads that file, and Django finds it from `backend/` as well. Do not commit `.env`.
 
 ## Production Compose
 
