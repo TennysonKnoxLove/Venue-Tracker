@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { networkingService } from '../../api';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
+import { win98Alert } from '../../utils/Win98Modals';
 
 const EventsDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -25,43 +26,31 @@ const EventsDashboard = () => {
       setPastEvents(pastData);
     } catch (error) {
       console.error('Error fetching networking events:', error);
-      alert('Failed to load networking events');
+      win98Alert('Failed to load networking events', 'Error', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const getEventTypeDisplay = (eventType) => {
-    // If eventType is an object with id property, use the id
-    
-    const types = {
-      conference: { name: 'Conference', color: 'bg-blue-500' },
-      workshop: { name: 'Workshop', color: 'bg-green-500' },
-      meetup: { name: 'Meetup', color: 'bg-purple-500' },
-      showcase: { name: 'Showcase', color: 'bg-cyan-500' },
-      competition: { name: 'Competition', color: 'bg-orange-500' },
-      festival: { name: 'Festival', color: 'bg-pink-500' },
-      seminar: { name: 'Seminar', color: 'bg-yellow-500' },
-      party: { name: 'Party', color: 'bg-pink-300' },
-      other: { name: 'Other', color: 'bg-gray-500' }
+  const getEventTypeDisplay = (eventTypeName) => {
+    if (!eventTypeName) return null;
+
+    const colors = {
+      conference: 'bg-blue-500',
+      workshop: 'bg-green-500',
+      meetup: 'bg-purple-500',
+      showcase: 'bg-cyan-500',
+      competition: 'bg-orange-500',
+      festival: 'bg-pink-500',
+      seminar: 'bg-yellow-500',
+      party: 'bg-pink-300',
+      other: 'bg-gray-500',
     };
-    
-    // Use the event_type_name if available
-    if (typeof eventType === 'object' && eventType !== null && eventType.name) {
-      return (
-        <span className="bg-blue-500 text-white text-xs px-1 rounded">
-          {eventType.name}
-        </span>
-      );
-    }
-    
-    // If it's an event type ID or the event_type_name property exists
-    const displayName = typeof eventType === 'string' ? eventType : 'other';
-    const type = types[displayName.toLowerCase()] || types.other;
-    
+    const color = colors[eventTypeName.toLowerCase()] || 'bg-blue-500';
+
     return (
-      <span className={`${type.color} text-white text-xs px-1 rounded`}>
-        {type.name}
+      <span className={`${color} text-white text-xs px-1 rounded`}>
+        {eventTypeName}
       </span>
     );
   };
@@ -109,13 +98,7 @@ const EventsDashboard = () => {
                   {item.name}
                 </Link>
                 <span className="ml-2">
-                  {item.event_type_name ? (
-                    <span className="bg-blue-500 text-white text-xs px-1 rounded">
-                      {item.event_type_name}
-                    </span>
-                  ) : (
-                    getEventTypeDisplay(item.event_type)
-                  )}
+                  {getEventTypeDisplay(item.event_type_name)}
                 </span>
                 {item.virtual && (
                   <span className="bg-blue-600 text-white text-xs px-1 rounded">Virtual</span>
@@ -146,15 +129,6 @@ const EventsDashboard = () => {
               {item.description && (
                 <div className="my-2 text-gray-700 line-clamp-2">
                   {item.description}
-                </div>
-              )}
-              
-              {item.attendees && item.attendees.length > 0 && (
-                <div className="mt-2 flex items-center">
-                  <span className="mr-2">👥</span>
-                  <span className="text-gray-700">
-                    {item.attendees.length} {item.attendees.length === 1 ? 'Attendee' : 'Attendees'}
-                  </span>
                 </div>
               )}
             </div>

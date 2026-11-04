@@ -18,6 +18,9 @@ const ConnectionForm = () => {
     relationship_status: '',
   });
   const [skillInput, setSkillInput] = useState('');
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [initialSocialLinks, setInitialSocialLinks] = useState([]);
+  const [activeTab, setActiveTab] = useState('details');
 
   const relationshipOptions = [
     { value: 'contact', label: 'Contact' },
@@ -26,6 +29,16 @@ const ConnectionForm = () => {
     { value: 'mentor', label: 'Mentor' },
     { value: 'mentee', label: 'Mentee' },
     { value: 'friend', label: 'Friend' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  const platformOptions = [
+    { value: 'linkedin', label: 'LinkedIn' },
+    { value: 'twitter', label: 'Twitter' },
+    { value: 'instagram', label: 'Instagram' },
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'website', label: 'Website' },
+    { value: 'portfolio', label: 'Portfolio' },
     { value: 'other', label: 'Other' },
   ];
 
@@ -47,6 +60,14 @@ const ConnectionForm = () => {
           notes: connectionData.notes || '',
           relationship_status: connectionData.relationship_status || '',
         });
+        const links = (connectionData.social_links || []).map((link) => ({
+          id: link.id,
+          platform: link.platform || '',
+          url: link.url || '',
+          username: link.username || '',
+        }));
+        setSocialLinks(links);
+        setInitialSocialLinks(links);
       } catch (error) {
         console.error('Error fetching connection:', error);
         alert('Failed to load connection data');
@@ -83,11 +104,50 @@ const ConnectionForm = () => {
     });
   };
 
+  const addSocialLink = () => {
+    setSocialLinks((prev) => [...prev, { platform: '', url: '', username: '' }]);
+  };
+
+  const updateSocialLinkField = (index, name, value) => {
+    setSocialLinks((prev) => prev.map((link, i) => (
+      i === index ? { ...link, [name]: value } : link
+    )));
+  };
+
+  const removeSocialLink = (index) => {
+    setSocialLinks((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const syncSocialLinks = async (connectionId) => {
+    const keptIds = new Set(socialLinks.filter((link) => link.id).map((link) => link.id));
+    const removed = initialSocialLinks.filter((link) => !keptIds.has(link.id));
+    await Promise.all(removed.map((link) => networkService.deleteSocialLink(connectionId, link.id)));
+
+    const filled = socialLinks.filter((link) => link.platform || link.url || link.username);
+    await Promise.all(filled.map((link) => {
+      const payload = {
+        platform: link.platform,
+        url: link.url,
+        username: link.username || '',
+      };
+      if (link.id) {
+        return networkService.updateSocialLink(connectionId, link.id, payload);
+      }
+      return networkService.createInteraction(connectionId, payload);
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.name) {
       alert('Please enter a name for the connection');
+      return;
+    }
+
+    const filledLinks = socialLinks.filter((link) => link.platform || link.url || link.username);
+    if (filledLinks.some((link) => !link.platform || !link.url)) {
+      alert('Each social link needs a platform and URL');
       return;
     }
     
@@ -98,12 +158,15 @@ const ConnectionForm = () => {
       const apiData = {
         ...formData
       };
-      
+
+      let connectionId = id;
       if (isEditMode) {
         await networkService.updateConnection(id, apiData);
       } else {
-        await networkService.createConnection(apiData);
+        const created = await networkService.createConnection(apiData);
+        connectionId = created.id;
       }
+      await syncSocialLinks(connectionId);
       
       navigate('/network/connections');
     } catch (error) {
@@ -133,7 +196,26 @@ const ConnectionForm = () => {
       </div>
       
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="mb-4">
+          <div className="flex border-b border-gray-500">
+            <button
+              type="button"
+              className={`tab-win98 ${activeTab === 'details' ? 'active' : ''}`}
+              onClick={() => setActiveTab('details')}
+            >
+              Details
+            </button>
+            <button
+              type="button"
+              className={`tab-win98 ${activeTab === 'social' ? 'active' : ''}`}
+              onClick={() => setActiveTab('social')}
+            >
+              Social Links
+            </button>
+          </div>
+          <div className="p-4 bg-white border-2 border-t-0 border-gray-400">
+        {activeTab === 'details' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
               <label className="block mb-1">
@@ -254,6 +336,63 @@ const ConnectionForm = () => {
                 placeholder="Any additional notes"
               ></textarea>
             </div>
+          </div>
+        </div>
+        )}
+
+        {activeTab === 'social' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <div className="font-bold">Social Links</div>
+            <button type="button" onClick={addSocialLink} className="btn-win98">
+              + Add Link
+            </button>
+          </div>
+          {socialLinks.length === 0 && (
+            <div className="text-gray-500 mb-2">No social links yet</div>
+          )}
+          {socialLinks.map((link, index) => {
+            const options = platformOptions.some((option) => option.value === link.platform)
+              ? platformOptions
+              : [{ value: link.platform, label: link.platform }, ...platformOptions];
+            return (
+              <div key={link.id || `new-${index}`} className="flex flex-wrap gap-2 mb-2">
+                <select
+                  value={link.platform}
+                  onChange={(e) => updateSocialLinkField(index, 'platform', e.target.value)}
+                  className="border-2 border-gray-400 bg-white p-1"
+                >
+                  <option value="">Platform</option>
+                  {options.filter((option) => option.value).map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="url"
+                  value={link.url}
+                  onChange={(e) => updateSocialLinkField(index, 'url', e.target.value)}
+                  className="flex-grow min-w-[180px] border-2 border-gray-400 bg-white p-1"
+                  placeholder="https://"
+                />
+                <input
+                  type="text"
+                  value={link.username}
+                  onChange={(e) => updateSocialLinkField(index, 'username', e.target.value)}
+                  className="border-2 border-gray-400 bg-white p-1"
+                  placeholder="Username"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeSocialLink(index)}
+                  className="btn-win98"
+                >
+                  Remove
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        )}
           </div>
         </div>
         

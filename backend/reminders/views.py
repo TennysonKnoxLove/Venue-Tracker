@@ -127,22 +127,6 @@ class ReminderViewSet(viewsets.ModelViewSet):
         ).order_by('due_date')
         serializer = self.get_serializer(upcoming_reminders, many=True)
         return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def today(self, request):
-        """Return reminders due today"""
-        today = timezone.now().date()
-        today_start = timezone.make_aware(datetime.datetime.combine(today, datetime.datetime.min.time()))
-        today_end = timezone.make_aware(datetime.datetime.combine(today, datetime.datetime.max.time()))
-        
-        today_reminders = Reminder.objects.filter(
-            user=request.user,
-            completed=False,
-            due_date__gte=today_start,
-            due_date__lte=today_end
-        ).order_by('due_date')
-        serializer = self.get_serializer(today_reminders, many=True)
-        return Response(serializer.data)
 
 class ReminderNotificationViewSet(viewsets.ModelViewSet):
     """ViewSet for reminder notifications"""

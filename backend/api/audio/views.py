@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 import json
+import traceback
 from django.http import FileResponse
 import os
 from .models import AudioFile, AudioEdit
@@ -131,44 +132,43 @@ class AudioFileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Process the audio
-        output_path = process_audio(
-            audio_file.file.path,
-            edit_type,
-            parameters
-        )
-        
-        if not output_path:
-            return Response(
-                {'error': 'Failed to process audio'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        try:
+            output_path = process_audio(
+                audio_file.file.path,
+                edit_type,
+                parameters
             )
-        
-        # Create a record of the edit
-        edit = AudioEdit.objects.create(
-            audio_file=audio_file,
-            edit_type=edit_type,
-            parameters=parameters,
-            user=request.user
-        )
-        
-        # Update the audio file with the new file
-        original_path = audio_file.file.path
-        filename = os.path.basename(output_path)
-        relative_path = f'audio/{filename}'
-        
-        audio_file.file = relative_path
-        
-        # Generate new waveform data
-        waveform_data = generate_waveform_data(output_path)
-        audio_file.waveform_data = waveform_data['waveform']
-        audio_file.duration = waveform_data['duration']
-        audio_file.save()
-        
-        # Delete the original file if it's different from the new one
-        if os.path.exists(original_path) and original_path != output_path:
-            os.remove(original_path)
-        
+
+            AudioEdit.objects.create(
+                audio_file=audio_file,
+                edit_type=edit_type,
+                parameters=parameters,
+                user=request.user
+            )
+
+            original_path = audio_file.file.path
+            filename = os.path.basename(output_path)
+            audio_file.file = f'audio/{filename}'
+
+            waveform_data = generate_waveform_data(output_path)
+            if not waveform_data:
+                raise RuntimeError('Failed to generate waveform data for the edited audio')
+            audio_file.waveform_data = waveform_data['waveform']
+            audio_file.duration = waveform_data['duration']
+            audio_file.save()
+
+            if os.path.exists(original_path) and original_path != output_path:
+                os.remove(original_path)
+        except Exception:
+            logger.exception('Error editing audio file %s', pk)
+            return Response(
+                {
+                    'error': 'Failed to process audio',
+                    'traceback': traceback.format_exc(),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         return Response(
             AudioFileDetailSerializer(audio_file).data,
             status=status.HTTP_200_OK

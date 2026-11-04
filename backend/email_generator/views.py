@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import VenueOutreach
 from .serializers import VenueOutreachSerializer, EmailGenerationSerializer
-from utils.ai.openai_client import generate_completion
+from utils.ai.openai_client import generate_outreach_email
 from utils.ai.templates import VENUE_OUTREACH_EMAIL_PROMPT
 from profiles.models import SocialLink
 
@@ -78,7 +78,7 @@ def generate_email(request):
     
     try:
         # Generate email with OpenAI API
-        email_content = generate_completion(prompt)
+        email_content = generate_outreach_email(prompt)
         
         # Save outreach record
         outreach = VenueOutreach.objects.create(

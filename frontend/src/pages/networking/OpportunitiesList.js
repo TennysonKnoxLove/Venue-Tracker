@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { networkingService } from '../../api';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
+import { win98Alert } from '../../utils/Win98Modals';
 
 const OpportunitiesList = () => {
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,7 @@ const OpportunitiesList = () => {
       setClosedOpportunities(closedData);
     } catch (error) {
       console.error('Error fetching networking opportunities:', error);
-      alert('Failed to load networking opportunities');
+      win98Alert('Failed to load networking opportunities', 'Error', 'error');
     } finally {
       setLoading(false);
     }
@@ -86,10 +87,14 @@ const OpportunitiesList = () => {
         setActiveOpportunities(activeOpportunities.filter(o => o.id !== opportunityId));
       }
       
-      alert(`Status updated to ${statusLabels[status]}`);
+      win98Alert(`Status updated to ${statusLabels[status]}`, 'Status Updated', 'info');
     } catch (error) {
       console.error('Error updating opportunity status:', error);
-      alert('Failed to update status: ' + (error.response?.data?.error || error.message));
+      win98Alert(
+        'Failed to update status: ' + (error.response?.data?.error || error.message),
+        'Error',
+        'error'
+      );
     }
   };
 
@@ -218,6 +223,13 @@ const OpportunitiesList = () => {
                 <div className="flex items-center mb-1">
                   <span className="mr-2">📍</span>
                   {item.location}
+                </div>
+              )}
+
+              {item.contact_person && (
+                <div className="flex items-center mb-1">
+                  <span className="mr-2">👤</span>
+                  {item.contact_person}
                 </div>
               )}
               

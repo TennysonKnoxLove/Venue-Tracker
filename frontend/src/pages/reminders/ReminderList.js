@@ -94,7 +94,6 @@ const ReminderItems = ({ reminders, showOverdueLabel, completingReminder, onComp
 };
 
 const ReminderList = ({
-  todayReminders,
   upcomingReminders,
   overdueReminders,
   completingReminder,
@@ -106,16 +105,6 @@ const ReminderList = ({
   return (
     <div className="mb-4">
       <div className="flex border-b border-gray-400">
-        <button
-          className={`tab-win98 mr-1 ${activeTab === 'today' ? 'active' : ''}`}
-          onClick={() => setActiveTab('today')}
-        >
-          Today {todayReminders.length > 0 && (
-            <span className="inline-block ml-1 px-2 bg-blue-800 text-white text-xs border border-blue-900 shadow-inner rounded-sm">
-              {todayReminders.length}
-            </span>
-          )}
-        </button>
         <button
           className={`tab-win98 mr-1 ${activeTab === 'upcoming' ? 'active' : ''}`}
           onClick={() => setActiveTab('upcoming')}
@@ -135,14 +124,6 @@ const ReminderList = ({
       </div>
 
       <div className="mt-2 p-2 bg-white border-2 border-gray-400 inset">
-        {activeTab === 'today' && (
-          <ReminderItems
-            reminders={todayReminders}
-            completingReminder={completingReminder}
-            onComplete={onComplete}
-            onSnooze={onSnooze}
-          />
-        )}
         {activeTab === 'upcoming' && (
           <ReminderItems
             reminders={upcomingReminders}

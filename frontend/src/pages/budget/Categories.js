@@ -1,6 +1,6 @@
 import { budgetService } from '../../api';
 import { win98Alert, win98Prompt } from '../../utils/Win98Modals';
-import { getRandomColor } from 'Utils';
+import { getRandomColor } from './Utils';
 
 
 export function getCategoryActions({

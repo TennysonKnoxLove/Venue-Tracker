@@ -1,4 +1,14 @@
 import { audioService } from '../../api';
+import { win98Alert } from '../../utils/Win98Modals';
+
+const stopPlayback = (audioRef, setIsPlaying) => {
+  const audio = audioRef.current;
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+  setIsPlaying(false);
+};
 
 export function getEditActions({
   selectedFile,
@@ -6,10 +16,16 @@ export function getEditActions({
   setEditParams,
   setSelectedFile,
   setAudioFiles,
-  setError,
+  audioRef,
+  setIsPlaying,
+  setApplyingEdit,
+  setPlaybackToken,
 }) {
   const handleApplyEdit = async (editType) => {
     if (!selectedFile) return;
+
+    stopPlayback(audioRef, setIsPlaying);
+    setApplyingEdit(true);
 
     try {
       const parameters = {};
@@ -35,6 +51,8 @@ export function getEditActions({
 
       await audioService.applyEdit(selectedFile.id, editType, parameters);
       const updatedFile = await audioService.getAudioDetails(selectedFile.id);
+      stopPlayback(audioRef, setIsPlaying);
+      setPlaybackToken(Date.now());
       setSelectedFile(updatedFile);
 
       setAudioFiles((prev) =>
@@ -42,7 +60,13 @@ export function getEditActions({
       );
     } catch (err) {
       console.error(`Error applying ${editType} edit:`, err);
-      setError(`Failed to apply ${editType} edit. Please try again.`);
+      stopPlayback(audioRef, setIsPlaying);
+      const data = err.response?.data;
+      const trace = data?.traceback || data?.error || err.message || `Failed to apply ${editType} edit.`;
+      setApplyingEdit(false);
+      await win98Alert(String(trace), 'Audio Error', 'error');
+    } finally {
+      setApplyingEdit(false);
     }
   };
 

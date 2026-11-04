@@ -1,4 +1,5 @@
 import { emailService } from '../../api';
+import { win98Alert, win98Confirm } from '../../utils/Win98Modals';
 
 export function getFormActions({
   formData,
@@ -7,7 +8,6 @@ export function getFormActions({
   setGeneratedEmail,
   generatedEmail,
   setLoading,
-  outreachHistory,
   setOutreachHistory,
 }) {
   const handleChange = (e) => {
@@ -40,12 +40,23 @@ export function getFormActions({
     try {
       setLoading(true);
       const response = await emailService.generateEmail(requestData);
-      setGeneratedEmail(response.email);
+      const email = (response.email || '').trim();
+      if (!email) {
+        setError('The generator returned an empty email. Please try again.');
+        return;
+      }
+
+      setGeneratedEmail(email);
+      setFormData({
+        venue_name: '',
+        event_date: '',
+        notes: '',
+      });
       setOutreachHistory((current) => [
         {
           id: response.outreach_id,
           venue_name: requestData.venue_name,
-          email_content: response.email,
+          email_content: email,
           sent_date: new Date().toISOString(),
           event_date: requestData.event_date || null,
           notes: requestData.notes,
@@ -60,11 +71,10 @@ export function getFormActions({
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(generatedEmail);
-        alert('Email copied to clipboard!');
+        await navigator.clipboard.writeText(generatedEmail);
       } else {
         const textArea = document.createElement('textarea');
         textArea.value = generatedEmail;
@@ -80,27 +90,33 @@ export function getFormActions({
         const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
 
-        if (successful) {
-          alert('Email copied to clipboard!');
-        } else {
-          alert('Unable to copy email. Please select and copy manually.');
+        if (!successful) {
+          throw new Error('Copy command failed');
         }
       }
+
+      await win98Alert('Email copied to clipboard!', 'Copied', 'info');
     } catch (err) {
       console.error('Failed to copy text: ', err);
-      alert('Unable to copy email. Please select and copy manually.');
+      await win98Alert('Unable to copy email. Please select and copy manually.', 'Copy Failed', 'error');
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this outreach record?')) {
-      try {
-        await emailService.deleteOutreach(id);
-        setOutreachHistory(outreachHistory.filter((item) => item.id !== id));
-      } catch (err) {
-        console.error('Failed to delete outreach:', err);
-        alert('Failed to delete outreach record');
-      }
+    const confirmed = await win98Confirm(
+      'Are you sure you want to delete this outreach record?',
+      'Delete Email',
+      'warning'
+    );
+    if (!confirmed) return;
+
+    try {
+      await emailService.deleteOutreach(id);
+      setOutreachHistory((current) => current.filter((item) => item.id !== id));
+      await win98Alert('Outreach record deleted', 'Deleted', 'info');
+    } catch (err) {
+      console.error('Failed to delete outreach:', err);
+      await win98Alert('Failed to delete outreach record', 'Error', 'error');
     }
   };
 

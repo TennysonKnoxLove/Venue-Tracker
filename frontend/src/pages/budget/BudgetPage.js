@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { getBudgetData } from './GetBudgetData';
+import { useBudgetData } from './GetBudgetData';
 import { useBudgetEffects } from './Effects';
 import { getCategoryActions } from './Categories';
 import { getFilterActions } from './Filter';
@@ -13,6 +13,7 @@ const BudgetPage = () => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [formError, setFormError] = useState(null);
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -34,7 +35,7 @@ const BudgetPage = () => {
     endDate: '',
   });
 
-  const { fetchExpenses, fetchCategories, fetchSummary } = getBudgetData({
+  const { fetchExpenses, fetchCategories, fetchSummary } = useBudgetData({
     filters,
     setLoading,
     setError,
@@ -70,8 +71,10 @@ const BudgetPage = () => {
     keepReceipt,
     setKeepReceipt,
     fileInputRef,
+    setExpenses,
     fetchExpenses,
     fetchSummary,
+    setFormError,
   });
 
   const { handleFilterChange, applyFilters, resetFilters } = getFilterActions({
@@ -218,7 +221,13 @@ const BudgetPage = () => {
                 )}
               </div>
             </div>
-            
+
+            {formError && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 whitespace-pre-line">
+                {formError}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               {editMode && (
                 <button
@@ -382,8 +391,8 @@ const BudgetPage = () => {
                         {expense.category && (
                           <div className="mt-1">
                             <span
-                              className="inline-block px-2 py-1 text-xs text-white rounded"
-                              style={{ backgroundColor: expense.category_color }}
+                              className="inline-block px-2 py-1 text-xs text-black rounded"
+                              style={{ backgroundColor: expense.category_color, color: '#000' }}
                             >
                               {expense.category_name}
                             </span>

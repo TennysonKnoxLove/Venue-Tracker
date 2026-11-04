@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Window from '../../components/layout/Window';
 import Button from '../../components/layout/Button';
 import { audioService } from '../../api';
@@ -15,6 +16,8 @@ const AudioEditorPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [applyingEdit, setApplyingEdit] = useState(false);
+  const [playbackToken, setPlaybackToken] = useState(0);
   const [editParams, setEditParams] = useState({
     volume: 0,
     trim: { start: 0, end: 30 },
@@ -30,7 +33,9 @@ const AudioEditorPage = () => {
     setLoading,
     setError,
     setEditParams,
+    setIsPlaying,
     audioRef,
+    playbackToken,
   });
 
   const {
@@ -44,6 +49,7 @@ const AudioEditorPage = () => {
     setSelectedFile,
     selectedFile,
     audioRef,
+    setIsPlaying,
     user,
     setLoading,
   });
@@ -61,7 +67,10 @@ const AudioEditorPage = () => {
     setEditParams,
     setSelectedFile,
     setAudioFiles,
-    setError,
+    audioRef,
+    setIsPlaying,
+    setApplyingEdit,
+    setPlaybackToken,
   });
 
   const {
@@ -80,6 +89,17 @@ const AudioEditorPage = () => {
 
   return (
     <Window title="Audio Editor" width="900px">
+      {applyingEdit && createPortal(
+        <div
+          className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 cursor-wait select-none"
+          style={{ pointerEvents: 'all' }}
+        >
+          <div className="bg-[#c0c0c0] border-2 border-[#dfdfdf] border-r-[#404040] border-b-[#404040] px-6 py-4 text-sm">
+            Applying edit...
+          </div>
+        </div>,
+        document.body
+      )}
       <div className="audio-editor">
         <h2 className="text-2xl font-bold mb-4">Audio Editor</h2>
 
@@ -188,7 +208,7 @@ const AudioEditorPage = () => {
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteFile(file.id);
+                              handleDeleteFile(file.id, file.title);
                             }}
                           >
                             ✕

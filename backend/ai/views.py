@@ -86,8 +86,7 @@ def discover_opportunities(request):
                 },
                 {"role": "user", "content": prompt},
             ],
-            temperature=settings.OPENAI_TEMPERATURE,
-            max_tokens=settings.OPENAI_MAX_TOKENS,
+            max_completion_tokens=settings.OPENAI_MAX_COMPLETION_TOKENS,
         )
         
         # Process the response - updated for OpenAI 1.0+

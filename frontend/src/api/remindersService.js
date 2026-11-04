@@ -80,17 +80,7 @@ const getUpcomingReminders = async () => {
   }
 };
 
-const getTodayReminders = async () => {
-  try {
-    const response = await client.get('/reminders/today/');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching today\'s reminders:', error);
-    throw error;
-  }
-};
-
-export default {
+const remindersService = {
   getCategories,
   createCategory,
   getReminder,
@@ -99,5 +89,6 @@ export default {
   completeReminder,
   getOverdueReminders,
   getUpcomingReminders,
-  getTodayReminders,
-}; 
+};
+
+export default remindersService; 

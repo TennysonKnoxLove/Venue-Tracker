@@ -211,9 +211,13 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 
 # OpenAI API Settings
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4-turbo-preview')
-OPENAI_MAX_TOKENS = int(os.environ.get('OPENAI_MAX_TOKENS', 2000))
-OPENAI_TEMPERATURE = float(os.environ.get('OPENAI_TEMPERATURE', 0.5))
+OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'N/A')
+OPENAI_MAX_COMPLETION_TOKENS = int(
+    os.environ.get(
+        'OPENAI_MAX_COMPLETION_TOKENS',
+        os.environ.get('OPENAI_max_completion_tokens', 2000),
+    )
+)
 
 # Email Configuration
 if DEBUG:

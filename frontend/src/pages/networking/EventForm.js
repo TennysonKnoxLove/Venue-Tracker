@@ -2,9 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { networkingService } from '../../api';
 import moment from 'moment';
+import { win98Alert } from '../../utils/Win98Modals';
 
-// Remove the hardcoded fallback event types as they don't match database IDs
-const FALLBACK_EVENT_TYPES = [];
+const formatSubmitError = (err) => {
+  const data = err.response?.data;
+  if (!data) return 'Failed to submit event';
+  if (typeof data === 'string') return data;
+  if (data.detail) return String(data.detail);
+  const details = Object.entries(data)
+    .map(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(', ') : String(messages);
+      return `${field}: ${text}`;
+    })
+    .join('\n');
+  return details || 'Failed to submit event';
+};
+
+const resolveEventTypeId = async (name, eventTypes) => {
+  if (!name) return null;
+
+  const existing = eventTypes.find(
+    (type) => type.name.toLowerCase() === name.toLowerCase()
+  );
+  if (existing) return existing.id;
+
+  try {
+    const created = await networkingService.createEventType({ name });
+    return created.id;
+  } catch (error) {
+    const types = await networkingService.getEventTypes();
+    const match = (Array.isArray(types) ? types : []).find(
+      (type) => type.name.toLowerCase() === name.toLowerCase()
+    );
+    if (match) return match.id;
+    throw error;
+  }
+};
 
 const EventForm = () => {
   const { id } = useParams();
@@ -47,29 +80,27 @@ const EventForm = () => {
         if (isEditMode) {
           const eventData = await networkingService.getEvent(id);
           
-          const currentEventTypeId = eventData.event_type ? (eventData.event_type.id || eventData.event_type) : '';
-          let currentEventTypeName = '';
-          if (currentEventTypeId) {
-            const foundType = fetchedEventTypes.find(et => et.id === currentEventTypeId);
-            if (foundType) {
-              currentEventTypeName = foundType.name;
-            }
-          }
+          const currentEventTypeId = eventData.event_type
+            ? (eventData.event_type.id || eventData.event_type)
+            : '';
+          const matchedType = fetchedEventTypes.find(
+            (et) => String(et.id) === String(currentEventTypeId)
+          );
 
           setFormData({
             name: eventData.name || '',
             description: eventData.description || '',
             location: eventData.location || '',
-            event_type: currentEventTypeId, // Store ID
+            event_type: currentEventTypeId,
             date: eventData.date || moment().format('YYYY-MM-DD'),
             start_time: eventData.time ? moment(eventData.time, 'HH:mm:ss').format('HH:mm') : moment().format('HH:mm'),
             cost: eventData.cost !== null ? eventData.cost : ''
           });
-          setRawEventTypeInput(currentEventTypeName); // Set text input for editing
+          setRawEventTypeInput(eventData.event_type_name || matchedType?.name || '');
         }
       } catch (error) {
         console.error('Error loading form data:', error);
-        alert('Failed to load form data');
+        win98Alert('Failed to load form data', 'Error', 'error');
       } finally {
         setLoading(false);
       }
@@ -79,7 +110,7 @@ const EventForm = () => {
   }, [id, isEditMode]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     
     if (name === 'rawEventTypeInput') {
       setRawEventTypeInput(value);
@@ -124,6 +155,9 @@ const EventForm = () => {
       
       // Remove start_time as it's not in the database model
       delete eventData.start_time;
+
+      eventData.event_type = await resolveEventTypeId(rawEventTypeInput.trim(), eventTypes);
+      eventData.cost = eventData.cost === '' ? null : eventData.cost;
       
       if (isEditMode) {
         await networkingService.updateEvent(id, eventData);
@@ -131,12 +165,17 @@ const EventForm = () => {
         await networkingService.createEvent(eventData);
       }
       
-      // Navigate to event list on success
+      await win98Alert(
+        `Event ${isEditMode ? 'updated' : 'created'} successfully!`,
+        isEditMode ? 'Event Updated' : 'Event Created',
+        'info'
+      );
       navigate('/networking');
-      alert(`Event ${isEditMode ? 'updated' : 'created'} successfully!`);
     } catch (err) {
       console.error('Error submitting event:', err);
-      setError(err.response?.data || { detail: 'Failed to submit event' });
+      const message = formatSubmitError(err);
+      setError({ detail: message });
+      win98Alert(message, 'Error', 'error');
       setSubmitting(false);
     }
   };
@@ -188,7 +227,8 @@ const EventForm = () => {
                 required
                 className="w-full border-2 border-gray-400 p-2"
                 placeholder="Type or select event type"
-                list="event-types-datalist" // For autocompletion if desired
+                maxLength={50}
+                list="event-types-datalist"
               />
               {eventTypes.length > 0 && (
                 <datalist id="event-types-datalist">

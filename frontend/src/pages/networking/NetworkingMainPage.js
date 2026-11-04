@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import EventsDashboard from './EventsDashboard';
 import OpportunitiesList from './OpportunitiesList';
 
 const NetworkingMainPage = () => {
-  const [activeTab, setActiveTab] = useState('events');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'opportunities' ? 'opportunities' : 'events';
+
+  const selectTab = (tab) => {
+    setSearchParams(tab === 'opportunities' ? { tab: 'opportunities' } : {}, { replace: true });
+  };
 
   return (
     <div className="window-win98 p-0">
@@ -14,13 +19,13 @@ const NetworkingMainPage = () => {
         <div className="flex border-b border-gray-500">
           <button
             className={`tab-win98 ${activeTab === 'events' ? 'active' : ''}`}
-            onClick={() => setActiveTab('events')}
+            onClick={() => selectTab('events')}
           >
             Industry Events
           </button>
           <button
             className={`tab-win98 ${activeTab === 'opportunities' ? 'active' : ''}`}
-            onClick={() => setActiveTab('opportunities')}
+            onClick={() => selectTab('opportunities')}
           >
             Career Opportunities
           </button>

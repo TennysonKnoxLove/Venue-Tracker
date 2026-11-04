@@ -11,6 +11,16 @@ const getEventTypes = async () => {
   }
 };
 
+const createEventType = async (eventTypeData) => {
+  try {
+    const response = await client.post('/networking/event-types/', eventTypeData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating event type:', error);
+    throw error;
+  }
+};
+
 const getEvent = async (id) => {
   try {
     const response = await client.get(`/networking/events/${id}/`);
@@ -139,8 +149,9 @@ const getClosedOpportunities = async () => {
   }
 };
 
-export default {
+const networkingService = {
   getEventTypes,
+  createEventType,
   getEvent,
   createEvent,
   updateEvent,
@@ -153,4 +164,6 @@ export default {
   updateOpportunityStatus,
   getActiveOpportunities,
   getClosedOpportunities
-}; 
+};
+
+export default networkingService; 

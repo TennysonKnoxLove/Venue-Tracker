@@ -29,18 +29,6 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
-class EventAttendee(models.Model):
-    """Connections attending networking events"""
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendees')
-    contact = models.ForeignKey(NetworkContact, on_delete=models.CASCADE, related_name='events')
-    notes = models.TextField(blank=True)
-    
-    class Meta:
-        unique_together = ('event', 'contact')
-        
-    def __str__(self):
-        return f"{self.contact} at {self.event}"
-
 class Opportunity(models.Model):
     """Professional networking opportunities"""
     STATUS_CHOICES = [
@@ -69,6 +57,7 @@ class Opportunity(models.Model):
     compensation = models.CharField(max_length=100, blank=True)
     application_url = models.URLField(blank=True)
     deadline = models.DateField(null=True, blank=True)
+    contact_person = models.CharField(max_length=100, blank=True)
     contact = models.ForeignKey(NetworkContact, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities')
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')

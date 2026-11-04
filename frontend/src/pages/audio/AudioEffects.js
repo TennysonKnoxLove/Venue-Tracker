@@ -10,7 +10,9 @@ export function useAudioEffects({
   setLoading,
   setError,
   setEditParams,
+  setIsPlaying,
   audioRef,
+  playbackToken,
 }) {
   const audioContextRef = useRef(null);
   
@@ -33,20 +35,25 @@ export function useAudioEffects({
   useEffect(() => {
     if (!selectedFile || !audioRef.current) return;
 
-      if (selectedFile.file) {
-        audioRef.current.src = selectedFile.file;
-      } else {
-      audioRef.current.src = audioDownloadUrl(selectedFile.id);
-      }
-      
-      setEditParams({
-        volume: 0,
-        trim: { 
-          start: 0, 
+    const base = selectedFile.file || audioDownloadUrl(selectedFile.id);
+    const src = playbackToken
+      ? `${base}${base.includes('?') ? '&' : '?'}v=${playbackToken}`
+      : base;
+    const audio = audioRef.current;
+    audio.pause();
+    audio.currentTime = 0;
+    audio.src = src;
+    audio.load();
+    setIsPlaying(false);
+
+    setEditParams({
+      volume: 0,
+      trim: {
+        start: 0,
         end: selectedFile.duration ? Math.min(30, selectedFile.duration) : 30,
-        },
-        reverb: { roomScale: 0.7, damping: 0.5 },
+      },
+      reverb: { roomScale: 0.7, damping: 0.5 },
       speed: 1.0,
     });
-  }, [selectedFile, audioRef, setEditParams]);
+  }, [selectedFile, audioRef, setEditParams, setIsPlaying, playbackToken]);
 }

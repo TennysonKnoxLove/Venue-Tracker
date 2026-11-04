@@ -10,17 +10,21 @@ const SavedMark = () => (
 const VenueResult = ({ venue, index, saved, onSave }) => (
   <div className="border p-4">
     <div className="flex justify-between items-start">
-      <h3 className="text-xl font-bold">{venue.name}</h3>
+      <h3 className="text-xl font-bold">{venue.name || 'N/A'}</h3>
       {saved ? <SavedMark /> : <Button onClick={() => onSave(venue, index)}>Save</Button>}
     </div>
-    <p className="text-sm my-2">{venue.description}</p>
+    <p className="text-sm my-2">{venue.description || 'N/A'}</p>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-      <p><strong>Address:</strong> {venue.address}, {venue.city}, {venue.state} {venue.zipcode}</p>
-      <p><strong>Phone:</strong> {venue.phone}</p>
-      <p><strong>Email:</strong> {venue.email}</p>
-      <p><strong>Website:</strong> <a href={venue.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{venue.website}</a></p>
-      <p><strong>Capacity:</strong> {venue.capacity}</p>
-      <p><strong>Genres:</strong> {venue.genres}</p>
+      <p><strong>Address:</strong> {[venue.address, venue.city, venue.state, venue.zipcode].filter(Boolean).join(', ') || 'N/A'}</p>
+      <p><strong>Phone:</strong> {venue.phone || 'N/A'}</p>
+      <p><strong>Email:</strong> {venue.email || 'N/A'}</p>
+      <p><strong>Website:</strong> {venue.website
+        ? <a href={venue.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{venue.website}</a>
+        : 'N/A'}</p>
+      <p><strong>Capacity:</strong> {venue.capacity || 'N/A'}</p>
+      <p><strong>Opens:</strong> {venue.open_time || 'N/A'}</p>
+      <p><strong>Closes:</strong> {venue.close_time || 'N/A'}</p>
+      <p><strong>Genres:</strong> {venue.genres || 'N/A'}</p>
     </div>
   </div>
 );

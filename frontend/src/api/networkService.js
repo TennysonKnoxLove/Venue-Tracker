@@ -73,12 +73,39 @@ const createInteraction = async (connectionId, interactionData) => {
   }
 };
 
-export default {
+const updateSocialLink = async (connectionId, linkId, linkData) => {
+  try {
+    const response = await client.put(
+      `/network/contacts/${connectionId}/social-links/${linkId}/`,
+      linkData
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating social link ${linkId}:`, error);
+    throw error;
+  }
+};
+
+const deleteSocialLink = async (connectionId, linkId) => {
+  try {
+    await client.delete(`/network/contacts/${connectionId}/social-links/${linkId}/`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting social link ${linkId}:`, error);
+    throw error;
+  }
+};
+
+const networkService = {
   getConnections,
   getConnection,
   createConnection,
   updateConnection,
   deleteConnection,
   getInteractions,
-  createInteraction
-}; 
+  createInteraction,
+  updateSocialLink,
+  deleteSocialLink,
+};
+
+export default networkService; 

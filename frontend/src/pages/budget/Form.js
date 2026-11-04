@@ -11,6 +11,40 @@ const emptyForm = () => ({
   receipt_image: null,
 });
 
+const fieldLabels = {
+  amount: 'Amount',
+  description: 'Description',
+  location: 'Where',
+  category: 'Category',
+  date: 'Date',
+  receipt_image: 'Receipt',
+  non_field_errors: 'Error',
+};
+
+const formatSaveError = (err) => {
+  const data = err?.response?.data;
+  if (!data) {
+    return 'Failed to save expense';
+  }
+  if (typeof data === 'string') {
+    return data;
+  }
+  if (typeof data.detail === 'string') {
+    return data.detail;
+  }
+
+  const messages = Object.entries(data).flatMap(([field, fieldErrors]) => {
+    const text = Array.isArray(fieldErrors) ? fieldErrors.join(' ') : String(fieldErrors);
+    if (!text || text === '[object Object]') {
+      return [];
+    }
+    const label = fieldLabels[field] || field.replace(/_/g, ' ');
+    return [`${label}: ${text}`];
+  });
+
+  return messages.length > 0 ? messages.join('\n') : 'Failed to save expense';
+};
+
 export function getFormActions({
   formData,
   setFormData,
@@ -21,11 +55,24 @@ export function getFormActions({
   keepReceipt,
   setKeepReceipt,
   fileInputRef,
+  setExpenses,
   fetchExpenses,
   fetchSummary,
+  setFormError,
 }) {
+  const upsertExpense = (saved) => {
+    if (!saved || saved.id == null) {
+      return;
+    }
+
+    setExpenses((current) => {
+      const list = Array.isArray(current) ? current : [];
+      return [saved, ...list.filter((expense) => expense.id !== saved.id)];
+    });
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    setFormError(null);
     setFormData({
       ...formData,
       [name]: value,
@@ -60,6 +107,7 @@ export function getFormActions({
     setEditMode(false);
     setEditingExpenseId(null);
     setKeepReceipt(true);
+    setFormError(null);
     setFormData(emptyForm());
 
     if (fileInputRef.current) {
@@ -81,8 +129,11 @@ export function getFormActions({
 
       await budgetService.deleteExpense(expenseId);
 
-      fetchExpenses();
-      fetchSummary();
+      setExpenses((current) =>
+        (Array.isArray(current) ? current : []).filter((expense) => expense.id !== expenseId)
+      );
+
+      await Promise.all([fetchExpenses(), fetchSummary()]);
 
       await win98Alert('Expense deleted successfully', 'Success', 'info');
     } catch (err) {
@@ -97,6 +148,7 @@ export function getFormActions({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError(null);
 
     try {
       const data = new FormData();
@@ -106,38 +158,40 @@ export function getFormActions({
       if (formData.category) data.append('category', formData.category);
       data.append('date', formData.date);
 
-      if (editMode) {
-        if (formData.receipt_image) {
-          data.append('receipt_image', formData.receipt_image);
-        }
-
-        await budgetService.updateExpense(editingExpenseId, data);
-
-        setEditMode(false);
-        setEditingExpenseId(null);
-
-        await win98Alert('Expense updated successfully', 'Success', 'info');
-      } else {
-        if (formData.receipt_image) {
-          data.append('receipt_image', formData.receipt_image);
-        }
-
-        await budgetService.createExpense(data);
-
-        await win98Alert('Expense added successfully', 'Success', 'info');
+      if (formData.receipt_image) {
+        data.append('receipt_image', formData.receipt_image);
       }
 
+      const saved = editMode
+        ? await budgetService.updateExpense(editingExpenseId, data)
+        : await budgetService.createExpense(data);
+
+      upsertExpense(saved);
+
+      if (editMode) {
+        setEditMode(false);
+        setEditingExpenseId(null);
+      }
+
+      setKeepReceipt(true);
       setFormData(emptyForm());
 
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
 
-      fetchExpenses();
-      fetchSummary();
+      await Promise.all([fetchExpenses(), fetchSummary()]);
+
+      await win98Alert(
+        editMode ? 'Expense updated successfully' : 'Expense added successfully',
+        'Success',
+        'info'
+      );
     } catch (err) {
       console.error('Error saving expense:', err);
-      await win98Alert('Failed to save expense', 'Error', 'error');
+      const message = formatSaveError(err);
+      setFormError(message);
+      await win98Alert(message, 'Error', 'error');
     }
   };
 

@@ -1,4 +1,5 @@
 import { audioService } from '../../api';
+import { win98Confirm } from '../../utils/Win98Modals';
 
 const audioDownloadUrl = (id) =>
   `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/audio/${id}/download/`;
@@ -18,6 +19,15 @@ export async function fetchAudioFiles({ setLoading, setError, setAudioFiles }) {
   }
 }
 
+const stopPlayback = (audioRef, setIsPlaying) => {
+  const audio = audioRef.current;
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+  setIsPlaying(false);
+};
+
 export function getFileActions({
   setIsUploading,
   setError,
@@ -25,6 +35,7 @@ export function getFileActions({
   setSelectedFile,
   selectedFile,
   audioRef,
+  setIsPlaying,
   user,
   setLoading,
 }) {
@@ -54,13 +65,27 @@ export function getFileActions({
     }
   };
 
-  const handleDeleteFile = async (fileId) => {
+  const handleDeleteFile = async (fileId, fileTitle) => {
+    const confirmed = await win98Confirm(
+      `Are you sure you want to delete "${fileTitle || 'this audio file'}"?`,
+      'Delete Audio',
+      'warning'
+    );
+    if (!confirmed) return;
+
+    const audio = audioRef.current;
+    stopPlayback(audioRef, setIsPlaying);
+
     try {
       await audioService.deleteAudio(fileId);
 
       setAudioFiles((prev) => prev.filter((item) => item.id !== fileId));
       if (selectedFile && selectedFile.id === fileId) {
         setSelectedFile(null);
+        if (audio) {
+          audio.removeAttribute('src');
+          audio.load();
+        }
       }
     } catch (err) {
       console.error('Error deleting audio file:', err);

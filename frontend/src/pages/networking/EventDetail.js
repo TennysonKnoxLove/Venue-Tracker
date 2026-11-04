@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { networkingService } from '../../api';
 import moment from 'moment';
+import { win98Alert, win98Confirm } from '../../utils/Win98Modals';
 
 const EventDetail = () => {
   const { id } = useParams();
@@ -17,7 +18,7 @@ const EventDetail = () => {
         setEvent(data);
       } catch (error) {
         console.error('Error fetching event:', error);
-        alert('Failed to load event details');
+        win98Alert('Failed to load event details', 'Error', 'error');
       } finally {
         setLoading(false);
       }
@@ -27,17 +28,22 @@ const EventDetail = () => {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this event?')) {
+    const confirmed = await win98Confirm(
+      'Are you sure you want to delete this event?',
+      'Delete Event',
+      'warning'
+    );
+    if (!confirmed) {
       return;
     }
 
     try {
       await networkingService.deleteEvent(id);
-      alert('Event deleted successfully');
+      await win98Alert('Event deleted successfully', 'Event Deleted', 'info');
       navigate('/networking');
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert('Failed to delete event');
+      win98Alert('Failed to delete event', 'Error', 'error');
     }
   };
 
@@ -122,14 +128,16 @@ const EventDetail = () => {
                 <span className="block">{event.location || 'Not specified'}</span>
               </div>
               
-              {(event.event_type_name || (event.event_type && event.event_type.name)) && (
-                <div className="mb-2">
-                  <span className="block font-bold">Event Type:</span>
+              <div className="mb-2">
+                <span className="block font-bold">Event Type:</span>
+                {event.event_type_name ? (
                   <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                    {event.event_type_name || event.event_type.name}
+                    {event.event_type_name}
                   </span>
-                </div>
-              )}
+                ) : (
+                  <span className="block">Not specified</span>
+                )}
+              </div>
               
               {event.cost !== null && (
                 <div className="mb-2">
@@ -144,23 +152,6 @@ const EventDetail = () => {
               <p className="whitespace-pre-wrap">{event.description || 'No description provided.'}</p>
             </div>
           </div>
-        </div>
-        
-        <div className="border-2 border-gray-400 p-4 mb-4 bg-white">
-          <h2 className="text-lg font-bold mb-2">Attendees ({event.attendees?.length || 0})</h2>
-          
-          {event.attendees && event.attendees.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {event.attendees.map(attendee => (
-                <div key={attendee.id} className="p-2 border border-gray-300 rounded">
-                  <div className="font-bold">{attendee.contact_details?.name || 'Unknown Contact'}</div>
-                  {attendee.notes && <div className="text-sm">{attendee.notes}</div>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No attendees yet.</p>
-          )}
         </div>
         
         <div className="flex justify-end mt-4">

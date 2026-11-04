@@ -5,7 +5,6 @@ import modalService from '../../utils/Win98Modals';
 
 export function useRemindersDashboard() {
   const [loading, setLoading] = useState(true);
-  const [todayReminders, setTodayReminders] = useState([]);
   const [upcomingReminders, setUpcomingReminders] = useState([]);
   const [overdueReminders, setOverdueReminders] = useState([]);
   const [completingReminder, setCompletingReminder] = useState(null);
@@ -15,13 +14,11 @@ export function useRemindersDashboard() {
   const fetchAllReminders = useCallback(async () => {
     try {
       setLoading(true);
-      const [todayData, upcomingData, overdueData] = await Promise.all([
-        remindersService.getTodayReminders(),
+      const [upcomingData, overdueData] = await Promise.all([
         remindersService.getUpcomingReminders(),
         remindersService.getOverdueReminders()
       ]);
 
-      setTodayReminders(todayData);
       setUpcomingReminders(upcomingData);
       setOverdueReminders(overdueData);
     } catch (error) {
@@ -89,7 +86,6 @@ export function useRemindersDashboard() {
 
   return {
     loading,
-    todayReminders,
     upcomingReminders,
     overdueReminders,
     completingReminder,

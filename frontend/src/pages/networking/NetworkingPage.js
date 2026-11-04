@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, useParams } from 'react-router-dom';
-import EventsDashboard from './EventsDashboard';
-import OpportunitiesList from './OpportunitiesList';
+import { Routes, Route, useParams, Link, Navigate } from 'react-router-dom';
 import EventForm from './EventForm';
 import OpportunityForm from './OpportunityForm';
 import EventDetail from './EventDetail';
@@ -14,14 +12,14 @@ const NetworkingPage = () => {
   return (
     <Routes>
       <Route path="/" element={<NetworkingMainPage />} />
-      <Route path="events" element={<EventsDashboard />} />
       <Route path="events/new" element={<EventForm />} />
       <Route path="events/:id" element={<EventDetail />} />
       <Route path="events/:id/edit" element={<EventForm />} />
-      <Route path="opportunities" element={<OpportunitiesList />} />
       <Route path="opportunities/new" element={<OpportunityForm />} />
       <Route path="opportunities/:id" element={<OpportunityDetail />} />
       <Route path="opportunities/:id/edit" element={<OpportunityForm />} />
+      <Route path="events" element={<Navigate to="/networking" replace />} />
+      <Route path="opportunities" element={<Navigate to="/networking?tab=opportunities" replace />} />
     </Routes>
   );
 };
@@ -89,6 +87,11 @@ const OpportunityDetail = () => {
               <p>{opportunity.compensation || 'Not specified'}</p>
             </div>
 
+            <div>
+              <h3 className="font-bold">Contact Person</h3>
+              <p>{opportunity.contact_person || 'Not specified'}</p>
+            </div>
+
             {opportunity.deadline && (
               <div>
                 <h3 className="font-bold">Application Deadline</h3>
@@ -134,12 +137,12 @@ const OpportunityDetail = () => {
         </div>
 
         <div className="flex space-x-2">
-          <a href={`/networking/opportunities/${id}/edit`} className="btn-win98">
+          <Link to={`/networking/opportunities/${id}/edit`} className="btn-win98">
             Edit Opportunity
-          </a>
-          <a href="/networking/opportunities" className="btn-win98">
+          </Link>
+          <Link to="/networking?tab=opportunities" className="btn-win98">
             Back to List
-          </a>
+          </Link>
         </div>
       </div>
     </div>

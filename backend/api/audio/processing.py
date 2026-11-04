@@ -1,7 +1,7 @@
 from pydub import AudioSegment
 import os
+import subprocess
 import uuid
-import tempfile
 import numpy as np
 import logging
 
@@ -19,33 +19,26 @@ def process_audio(file_path, edit_type, parameters):
     Returns:
         str: Path to the processed audio file
     """
-    try:
-        # Load the audio file
-        audio = AudioSegment.from_file(file_path)
-        
-        # Apply the edit based on type
-        if edit_type == 'trim':
-            audio = apply_trim(audio, parameters)
-        elif edit_type == 'speed':
-            audio = apply_speed(audio, parameters)
-        elif edit_type == 'reverb':
-            audio = apply_reverb(audio, parameters)
-        elif edit_type == 'volume':
-            audio = apply_volume(audio, parameters)
-        else:
-            raise ValueError(f"Unsupported edit type: {edit_type}")
-        
-        # Save the processed file with a unique name
-        output_dir = os.path.dirname(file_path)
-        output_filename = f"{uuid.uuid4()}.{file_path.split('.')[-1]}"
-        output_path = os.path.join(output_dir, output_filename)
-        
-        audio.export(output_path, format=file_path.split('.')[-1])
-        return output_path
-        
-    except Exception as e:
-        logger.error("Error processing audio: %s", e)
-        return None
+    output_dir = os.path.dirname(file_path)
+    output_filename = f"{uuid.uuid4()}.{file_path.split('.')[-1]}"
+    output_path = os.path.join(output_dir, output_filename)
+
+    if edit_type == 'speed':
+        return apply_speed(file_path, output_path, parameters)
+
+    audio = AudioSegment.from_file(file_path)
+
+    if edit_type == 'trim':
+        audio = apply_trim(audio, parameters)
+    elif edit_type == 'reverb':
+        audio = apply_reverb(audio, parameters)
+    elif edit_type == 'volume':
+        audio = apply_volume(audio, parameters)
+    else:
+        raise ValueError(f"Unsupported edit type: {edit_type}")
+
+    audio.export(output_path, format=file_path.split('.')[-1])
+    return output_path
 
 def apply_trim(audio, parameters):
     """Apply trim edit to audio segment"""
@@ -53,39 +46,143 @@ def apply_trim(audio, parameters):
     end_ms = parameters.get('end_ms', len(audio))
     return audio[start_ms:end_ms]
 
-def apply_speed(audio, parameters):
-    """Apply speed adjustment to audio segment"""
-    speed_factor = parameters.get('speed_factor', 1.0)
-    # Use pydub's speedup method
-    return audio.speedup(playback_speed=speed_factor)
+def _sample_rate(file_path):
+    result = subprocess.run(
+        [
+            'ffprobe', '-v', 'error',
+            '-select_streams', 'a:0',
+            '-show_entries', 'stream=sample_rate',
+            '-of', 'csv=p=0',
+            file_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    rate = result.stdout.strip()
+    if result.returncode == 0 and rate.isdigit():
+        return int(rate)
+    return AudioSegment.from_file(file_path).frame_rate
+
+def apply_speed(file_path, output_path, parameters):
+    """Change playback speed and pitch together. Faster sounds higher, slower sounds lower."""
+    speed_factor = float(parameters.get('speed_factor', 1.0))
+    if speed_factor < 0.5 or speed_factor > 2.0:
+        raise ValueError('Speed must be between 0.5 and 2.0')
+
+    sample_rate = _sample_rate(file_path)
+    pitched_rate = max(1, int(round(sample_rate * speed_factor)))
+    result = subprocess.run(
+        [
+            'ffmpeg', '-y', '-i', file_path,
+            '-filter:a', f'asetrate={pitched_rate},aresample={sample_rate}',
+            output_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        raise RuntimeError(result.stderr.strip() or 'ffmpeg failed to change speed')
+    return output_path
 
 def apply_reverb(audio, parameters):
-    """Apply reverb effect to audio segment"""
-    # Using a temp file for ffmpeg processing
-    room_scale = parameters.get('room_scale', 0.5)
-    damping = parameters.get('damping', 0.5)
-    
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-    temp_file.close()
-    
-    # Export to temp file
-    audio.export(temp_file.name, format="wav")
-    
-    # Apply reverb using ffmpeg
-    output_temp = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-    output_temp.close()
-    
-    # Add -y flag to force overwrite
-    os.system(f'ffmpeg -y -i {temp_file.name} -af "aecho=0.8:{room_scale}:1000:{damping}" {output_temp.name}')
-    
-    # Load the processed file
-    processed_audio = AudioSegment.from_file(output_temp.name)
-    
-    # Clean up temp files
-    os.unlink(temp_file.name)
-    os.unlink(output_temp.name)
-    
-    return processed_audio
+    """Apply a room reverb by convolving with a decaying impulse response.
+
+    Room scale sets the size and how long the tail rings. Damping darkens
+    the tail by rolling off high frequencies. The dry signal stays in the mix.
+    """
+    room_scale = min(1.0, max(0.0, float(parameters.get('room_scale', 0.5))))
+    damping = min(1.0, max(0.0, float(parameters.get('damping', 0.5))))
+
+    channels = audio.channels
+    sample_rate = audio.frame_rate
+    sample_width = audio.sample_width
+    raw = np.array(audio.get_array_of_samples(), dtype=np.float64)
+    raw = raw.reshape((-1, channels))
+
+    if sample_width == 1:
+        raw = raw - 128.0
+        scale = 128.0
+    else:
+        scale = float(1 << (8 * sample_width - 1))
+    normalized = raw / scale
+
+    processed = [
+        _reverberate(normalized[:, channel], sample_rate, room_scale, damping, channel + 1)
+        for channel in range(channels)
+    ]
+    mixed = np.column_stack(processed)
+    peak = float(np.max(np.abs(mixed))) if mixed.size else 0.0
+    if peak > 0.98:
+        mixed *= 0.98 / peak
+
+    if sample_width == 1:
+        pcm = np.clip(np.round(mixed * 127.0 + 128.0), 0, 255).astype(np.uint8)
+    elif sample_width == 4:
+        pcm = np.clip(np.round(mixed * 2147483647.0), -2147483648, 2147483647).astype(np.int32)
+    else:
+        sample_width = 2
+        pcm = np.clip(np.round(mixed * 32767.0), -32768, 32767).astype(np.int16)
+
+    return AudioSegment(
+        data=np.ascontiguousarray(pcm).tobytes(),
+        sample_width=sample_width,
+        frame_rate=sample_rate,
+        channels=channels,
+    )
+
+
+def _reverberate(dry, sample_rate, room_scale, damping, seed):
+    impulse = _room_impulse(sample_rate, room_scale, damping, seed)
+    wet = _fft_convolve(dry, impulse)
+    padded = np.pad(dry, (0, len(impulse) - 1))
+    return padded + wet
+
+
+def _room_impulse(sample_rate, room_scale, damping, seed):
+    """Diffuse room tail. Reflections are dense and quiet so they read as space."""
+    rt60 = 0.35 + room_scale * 2.5
+    length = max(int(sample_rate * (rt60 + 0.05)), 1)
+    timeline = np.arange(length) / sample_rate
+    envelope = np.exp(-6.9078 * timeline / rt60)
+    fade = min(int(sample_rate * 0.004), length)
+    if fade:
+        envelope[:fade] *= np.linspace(0.0, 1.0, fade, endpoint=False)
+
+    impulse = np.random.default_rng(seed).standard_normal(length) * envelope
+    span = 0.015 + room_scale * 0.07
+    for index in range(32):
+        position = (index + 0.5) / 32
+        delay = 0.004 + span * position * position
+        sample = int(delay * sample_rate)
+        if sample < length:
+            sign = 1.0 if (index + seed) % 2 == 0 else -1.0
+            impulse[sample] += sign * (0.12 - 0.08 * position)
+
+    impulse = _damp_impulse(impulse, sample_rate, damping)
+    energy = float(np.sqrt(np.sum(impulse * impulse)))
+    if energy > 0:
+        impulse /= energy
+    return impulse * 0.55
+
+
+def _damp_impulse(impulse, sample_rate, damping):
+    """Darken the tail. Higher damping lowers the high-frequency cutoff."""
+    if damping <= 0.01:
+        return impulse
+    cutoff = 14000.0 - damping * 12800.0
+    spectrum = np.fft.rfft(impulse)
+    freqs = np.fft.rfftfreq(len(impulse), 1.0 / sample_rate)
+    spectrum *= 1.0 / np.sqrt(1.0 + (freqs / cutoff) ** 4)
+    return np.fft.irfft(spectrum, len(impulse))
+
+
+def _fft_convolve(signal, impulse):
+    size = len(signal) + len(impulse) - 1
+    transform = 1 << (size - 1).bit_length()
+    mixed = np.fft.irfft(np.fft.rfft(signal, transform) * np.fft.rfft(impulse, transform), transform)
+    return mixed[:size]
 
 def apply_volume(audio, parameters):
     """Apply volume adjustment to audio segment"""

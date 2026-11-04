@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { networkingService } from '../../api';
 import moment from 'moment';
-import { format } from 'date-fns';
 import { win98Alert } from '../../utils/Win98Modals';
 
 const OpportunityForm = () => {
@@ -119,7 +118,6 @@ const OpportunityForm = () => {
         ...formData,
         // Convert empty string to null for optional fields
         deadline: formData.deadline || null,
-        contact_person: formData.contact_person || null,
       };
       
       if (isEditMode) {
@@ -130,7 +128,7 @@ const OpportunityForm = () => {
         await win98Alert('Opportunity created successfully', 'Creation Successful', 'info');
       }
       
-      navigate('/networking/opportunities');
+      navigate('/networking?tab=opportunities');
     } catch (error) {
       console.error('Error saving opportunity:', error);
       
@@ -326,6 +324,7 @@ const OpportunityForm = () => {
                 onChange={handleChange}
                 className="w-full border-2 border-gray-400 p-2"
                 placeholder="Name of contact person"
+                maxLength={100}
               />
             </div>
           </div>
@@ -368,7 +367,7 @@ const OpportunityForm = () => {
             <button
               type="button"
               className="btn-win98"
-              onClick={() => navigate('/networking')}
+              onClick={() => navigate('/networking?tab=opportunities')}
             >
               Cancel
             </button>

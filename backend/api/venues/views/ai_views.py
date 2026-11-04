@@ -114,17 +114,19 @@ class ImportSearchResultsView(APIView):
                     )
                     
                     venue_dict = {
-                        'name': venue_data.get('name', ''),
-                        'description': venue_data.get('description', ''),
-                        'address': venue_data.get('address', ''),
-                        'city': venue_data.get('city', search_query.city),
+                        'name': venue_data.get('name') or '',
+                        'description': venue_data.get('description') or '',
+                        'address': venue_data.get('address') or '',
+                        'city': venue_data.get('city') or search_query.city,
                         'state': state_obj.id,
-                        'zipcode': venue_data.get('zipcode', ''),
-                        'phone': venue_data.get('phone', ''),
-                        'email': venue_data.get('email', ''),
-                        'website': venue_data.get('website', ''),
+                        'zipcode': venue_data.get('zipcode') or '',
+                        'phone': venue_data.get('phone') or '',
+                        'email': venue_data.get('email') or '',
+                        'website': venue_data.get('website') or '',
                         'capacity': venue_data.get('capacity'),
-                        'notes': venue_data.get('genres', ''),
+                        'open_time': venue_data.get('open_time') or None,
+                        'close_time': venue_data.get('close_time') or None,
+                        'notes': venue_data.get('genres') or '',
                     }
                     
                     # Try to create the venue

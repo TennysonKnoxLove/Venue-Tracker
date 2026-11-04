@@ -11,7 +11,10 @@ const ChatRoom = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
+  const messagesRef = useRef([]);
+  messagesRef.current = messages;
   const [newMessage, setNewMessage] = useState('');
+  const [roomName, setRoomName] = useState('');
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
   const messageInputRef = useRef(null);
@@ -36,14 +39,15 @@ const ChatRoom = () => {
 
       if (response.ok) {
         const data = await response.json();
+        const currentMessages = messagesRef.current;
         // Only update if we have new messages
-        if (data.length !== messages.length || 
-            (data.length > 0 && messages.length > 0 && data[data.length-1].id !== messages[messages.length-1].id)) {
+        if (data.length !== currentMessages.length || 
+            (data.length > 0 && currentMessages.length > 0 && data[data.length-1].id !== currentMessages[currentMessages.length-1].id)) {
           setMessages(data);
           setLastFetchTime(new Date());
         }
         // Clear any errors if fetch is successful
-        if (error) setError(null);
+        setError((current) => (current ? null : current));
       } else {
         console.error('Failed to fetch messages:', response.status);
         if (response.status === 401) {
@@ -56,7 +60,29 @@ const ChatRoom = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [roomId, messages.length, error]);
+  }, [apiBaseUrl, roomId]);
+
+  const fetchRoom = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      const response = await fetch(`${apiBaseUrl}/chat/rooms/${roomId}/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRoomName(data.name || '');
+      }
+    } catch (err) {
+      console.error('Error fetching chat room:', err);
+    }
+  }, [apiBaseUrl, roomId]);
 
   // Send message via REST API
   const sendMessage = async (e) => {
@@ -108,8 +134,8 @@ const ChatRoom = () => {
 
   // Set up polling on component mount
   useEffect(() => {
-    // Initial fetch
     fetchMessages();
+    fetchRoom();
     
     // Set up polling interval (every 1.5 seconds)
     pollingIntervalRef.current = setInterval(() => {
@@ -127,7 +153,7 @@ const ChatRoom = () => {
         clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [fetchMessages]);
+  }, [fetchMessages, fetchRoom]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -156,12 +182,15 @@ const ChatRoom = () => {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h2>{`Chat Room ${roomId}`}</h2>
+        <h2>{roomName || 'Chat'}</h2>
         {lastFetchTime && (
           <div className="last-update">
             Last updated: {new Date(lastFetchTime).toLocaleTimeString()}
           </div>
         )}
+        <button type="button" onClick={() => navigate('/chat')}>
+          Back to Rooms
+        </button>
       </div>
       
       <div className="message-container">

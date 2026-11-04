@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import moment from 'moment';
 import { useOutreachHistory } from './GetHistory';
 import { getFormActions } from './Form';
@@ -14,8 +14,15 @@ const EmailGeneratorPage = () => {
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState(null);
+  const generatedEmailRef = useRef(null);
 
   useOutreachHistory({ setOutreachHistory, setHistoryLoading });
+
+  useEffect(() => {
+    if (generatedEmail && generatedEmailRef.current) {
+      generatedEmailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [generatedEmail]);
 
   const { handleChange, handleSubmit, handleCopy, handleDelete } = getFormActions({
     formData,
@@ -101,9 +108,9 @@ const EmailGeneratorPage = () => {
       </div>
       
       {generatedEmail && (
-        <div className="window-win98 mb-6">
+        <div ref={generatedEmailRef} className="window-win98 mb-6">
           <div className="window-title-win98">
-            <div className="text-white font-bold px-2">Generated Email</div>
+            <div className="text-black font-bold px-2">Generated Email</div>
           </div>
           <div className="p-4 bg-gray-200">
             <div className="bg-white border-2 border-gray-400 p-4 mb-4 whitespace-pre-line">
@@ -124,7 +131,7 @@ const EmailGeneratorPage = () => {
       
       <div className="window-win98">
         <div className="window-title-win98">
-          <div className="text-white font-bold px-2">Outreach History</div>
+          <div className="text-black font-bold px-2">Outreach History</div>
         </div>
         <div className="p-4 bg-gray-200">
           {historyLoading ? (
@@ -155,7 +162,8 @@ const EmailGeneratorPage = () => {
                   
                   <div className="mb-2">
                     <p className="truncate text-gray-600">
-                      {item.email_content.substring(0, 100)}...
+                      {(item.email_content || 'No email was saved for this outreach.').substring(0, 100)}
+                      {(item.email_content || '').length > 100 ? '...' : ''}
                     </p>
                   </div>
                   
@@ -167,7 +175,7 @@ const EmailGeneratorPage = () => {
                       }}
                       className="bg-blue-100 text-blue-800 px-2 py-1 border border-blue-300 text-sm"
                     >
-                      View
+                      View Email
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}

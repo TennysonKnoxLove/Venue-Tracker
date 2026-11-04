@@ -4,6 +4,10 @@ import { formatCurrency, formatDate } from '../../utils/Format';
 export { formatCurrency, formatDate };
 
 export function groupExpensesByMonth(expenses) {
+  if (!Array.isArray(expenses)) {
+    return {};
+  }
+
   return expenses.reduce((acc, expense) => {
     const monthYear = format(new Date(expense.date), 'MMMM yyyy');
 

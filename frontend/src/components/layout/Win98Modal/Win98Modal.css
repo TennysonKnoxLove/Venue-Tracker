@@ -88,6 +88,11 @@
   font-size: 14px;
   line-height: 1.4;
   flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .win98-modal-input-container {

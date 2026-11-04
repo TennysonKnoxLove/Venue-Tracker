@@ -7,7 +7,7 @@ const HomePage = () => {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Welcome to Venue Tracker</h2>
-      <p className="mb-4">This application helps you discover and track music venues for hip-hop and R&B performances.</p>
+      <p className="mb-4">This application helps you discover and track music venues for performances as well as set reminders for events and keep track of your connections in the industry.</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         <Window title="Quick Links">

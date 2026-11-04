@@ -6,7 +6,6 @@ import SnoozeDialog from './SnoozeDialog';
 const RemindersDashboard = () => {
   const {
     loading,
-    todayReminders,
     upcomingReminders,
     overdueReminders,
     completingReminder,
@@ -46,7 +45,6 @@ const RemindersDashboard = () => {
       </div>
 
       <ReminderList
-        todayReminders={todayReminders}
         upcomingReminders={upcomingReminders}
         overdueReminders={overdueReminders}
         completingReminder={completingReminder}

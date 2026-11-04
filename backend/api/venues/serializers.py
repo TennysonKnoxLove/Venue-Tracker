@@ -40,10 +40,16 @@ class AIVenueResultSerializer(serializers.Serializer):
     state = serializers.CharField(required=False, allow_blank=True)
     zipcode = serializers.CharField(required=False, allow_blank=True)
     phone = serializers.CharField(required=False, allow_blank=True)
-    email = serializers.EmailField(required=False, allow_blank=True)
-    website = serializers.URLField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    website = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True)
     genres = serializers.CharField(required=False, allow_blank=True)
+    open_time = serializers.TimeField(
+        required=False, allow_null=True, format='%H:%M', input_formats=['%H:%M', '%H:%M:%S']
+    )
+    close_time = serializers.TimeField(
+        required=False, allow_null=True, format='%H:%M', input_formats=['%H:%M', '%H:%M:%S']
+    )
 
 class AISearchQuerySerializer(serializers.ModelSerializer):
     """Serializer for AI search queries"""

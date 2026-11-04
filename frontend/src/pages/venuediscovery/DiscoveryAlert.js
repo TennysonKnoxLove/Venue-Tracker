@@ -14,9 +14,9 @@ const DiscoveryAlert = ({ open, message, onClose }) => {
           </button>
         </div>
         <div className="p-4 flex flex-col items-center">
-          <div className="flex mb-4">
+          <div className="flex mb-4 w-full">
             <div className="mr-3 text-2xl">ℹ️</div>
-            <div className="text-sm">{message}</div>
+            <div className="text-sm text-left break-words min-w-0">{message}</div>
           </div>
           <button
             onClick={onClose}
