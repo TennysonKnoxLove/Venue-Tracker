@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from ai import views as ai_views
 from rest_framework_simplejwt.views import TokenObtainPairView
-from reminders.views import ReminderNotificationViewSet, ReminderCategoryViewSet
+from reminders.views import ReminderCategoryViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,11 +35,6 @@ urlpatterns = [
     path('api/email-generator/', include('email_generator.urls')),
     path('api/chat/', include('chat.urls')),
     path('api/budget/', include('budget.urls')),
-    
-    # Root level notifications (shortcut to reminders/notifications)
-    path('api/notifications/', ReminderNotificationViewSet.as_view({'get': 'list'}), name='notifications-list'),
-    path('api/notifications/mark_all_read/', ReminderNotificationViewSet.as_view({'post': 'mark_all_read'}), name='notifications-mark-all-read'),
-    path('api/notifications/<int:pk>/mark_read/', ReminderNotificationViewSet.as_view({'post': 'mark_read'}), name='notifications-mark-read'),
 ]
 
 # Serve media files in development

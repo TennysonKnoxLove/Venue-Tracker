@@ -2,9 +2,9 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from .models import Reminder, ReminderNotification, ReminderCategory
-from .serializers import ReminderSerializer, ReminderNotificationSerializer, ReminderCategorySerializer, ReminderDetailSerializer
-from .services import mark_completed, mark_read
+from .models import Reminder, ReminderCategory
+from .serializers import ReminderSerializer, ReminderCategorySerializer
+from .services import mark_completed
 import datetime
 
 # Create your views here.
@@ -16,12 +16,6 @@ class ReminderViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']
     ordering_fields = ['due_date', 'priority', 'created_at']
-    
-    def get_serializer_class(self):
-        """Return appropriate serializer class"""
-        if self.action == 'retrieve':
-            return ReminderDetailSerializer
-        return ReminderSerializer
     
     def get_queryset(self):
         """Return reminders for the authenticated user"""
@@ -127,41 +121,6 @@ class ReminderViewSet(viewsets.ModelViewSet):
         ).order_by('due_date')
         serializer = self.get_serializer(upcoming_reminders, many=True)
         return Response(serializer.data)
-
-class ReminderNotificationViewSet(viewsets.ModelViewSet):
-    """ViewSet for reminder notifications"""
-    serializer_class = ReminderNotificationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['sent_at']
-    
-    def get_queryset(self):
-        """Return notifications for the authenticated user's reminders"""
-        queryset = ReminderNotification.objects.filter(
-            reminder__user=self.request.user
-        ).order_by('-sent_at')
-        
-        read = self.request.query_params.get('read')
-        if read is not None:
-            read_bool = read.lower() == 'true'
-            queryset = queryset.filter(read=read_bool)
-            
-        return queryset
-    
-    @action(detail=True, methods=['post'])
-    def mark_read(self, request, pk=None):
-        """Mark a notification as read"""
-        notification = self.get_object()
-        mark_read(notification)
-        return Response({'status': 'notification marked as read'})
-    
-    @action(detail=False, methods=['post'])
-    def mark_all_read(self, request):
-        """Mark all notifications as read"""
-        notifications = self.get_queryset().filter(read=False)
-        for notification in notifications:
-            mark_read(notification)
-        return Response({'status': f'{notifications.count()} notifications marked as read'})
 
 class ReminderCategoryViewSet(viewsets.ModelViewSet):
     """API endpoint for managing reminder categories"""

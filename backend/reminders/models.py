@@ -39,15 +39,3 @@ class Reminder(models.Model):
     
     def __str__(self):
         return f"{self.title} - Due: {self.due_date}"
-class ReminderNotification(models.Model):
-    """Notification for reminders"""
-    reminder = models.ForeignKey(Reminder, on_delete=models.CASCADE, related_name='notifications')
-    sent_at = models.DateTimeField(auto_now_add=True)
-    read = models.BooleanField(default=False)
-    read_at = models.DateTimeField(null=True, blank=True)
-    
-    class Meta:
-        ordering = ['-sent_at']
-        
-    def __str__(self):
-        return f"Notification for {self.reminder.title}"

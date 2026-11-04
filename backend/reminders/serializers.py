@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Reminder, ReminderNotification, ReminderCategory
+from .models import Reminder, ReminderCategory
 
 class ReminderCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,14 +11,6 @@ class ReminderCategorySerializer(serializers.ModelSerializer):
         """Set the user from the request context"""
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
-
-class ReminderNotificationSerializer(serializers.ModelSerializer):
-    reminder_title = serializers.CharField(source='reminder.title', read_only=True)
-    
-    class Meta:
-        model = ReminderNotification
-        fields = ['id', 'reminder', 'reminder_title', 'sent_at', 'read', 'read_at']
-        read_only_fields = ['sent_at', 'read_at']
 
 class ReminderSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
@@ -41,9 +33,4 @@ class ReminderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Set the user from the request context"""
         validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
-class ReminderDetailSerializer(ReminderSerializer):
-    notifications = ReminderNotificationSerializer(many=True, read_only=True)
-    
-    class Meta(ReminderSerializer.Meta):
-        fields = ReminderSerializer.Meta.fields + ['notifications'] 
+        return super().create(validated_data) 

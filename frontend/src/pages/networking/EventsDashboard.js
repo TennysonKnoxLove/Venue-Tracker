@@ -100,9 +100,6 @@ const EventsDashboard = () => {
                 <span className="ml-2">
                   {getEventTypeDisplay(item.event_type_name)}
                 </span>
-                {item.virtual && (
-                  <span className="bg-blue-600 text-white text-xs px-1 rounded">Virtual</span>
-                )}
               </div>
             </div>
             
@@ -137,14 +134,6 @@ const EventsDashboard = () => {
               <Link to={`/networking/events/${item.id}`} className="btn-win98 text-sm">
                 View Details
               </Link>
-              {item.url && (
-                <button 
-                  onClick={() => window.open(item.url, '_blank')}
-                  className="btn-win98 text-sm"
-                >
-                  Website
-                </button>
-              )}
             </div>
           </div>
         ))}
